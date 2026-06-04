@@ -380,9 +380,16 @@ export default function JugarApp() {
                 className="flex-1 flex flex-col justify-center px-6"
               >
                 <form onSubmit={handleRegister} className="flex flex-col gap-4 bg-[#140e2e]/80 border border-slate-800/80 p-5 rounded-2xl backdrop-blur-md">
-                  <div className="text-center mb-1">
-                    <h2 className="text-white font-black text-base tracking-widest uppercase">Conquista Relámpago</h2>
-                    <p className="text-slate-400 text-[10px] uppercase font-bold tracking-wider mt-0.5">Ingreso de Participante</p>
+                  <div className="flex flex-col items-center gap-2 mb-1">
+                    <img 
+                      src="/assets/unipaz.jpg" 
+                      alt="UNIPAZ Logo" 
+                      className="w-14 h-14 rounded-full border-2 border-green-500/50 object-cover shadow-[0_0_15px_rgba(34,197,94,0.3)]"
+                    />
+                    <div className="text-center">
+                      <h2 className="text-white font-black text-base tracking-widest uppercase">Conquista Relámpago</h2>
+                      <p className="text-slate-400 text-[10px] uppercase font-bold tracking-wider mt-0.5">Ingreso · UNIPAZ</p>
+                    </div>
                   </div>
 
                   <div className="flex flex-col gap-1">
@@ -396,7 +403,7 @@ export default function JugarApp() {
                       placeholder="Ej: 1234"
                       value={pin}
                       onChange={(e) => setPin(e.target.value)}
-                      className="bg-slate-950/70 border border-slate-800 rounded-xl px-3 py-2 text-sm text-center font-mono font-black text-yellow-400 uppercase tracking-widest outline-none focus:border-cyan-500 transition-colors"
+                      className="bg-slate-950/70 border border-slate-800 rounded-xl px-3 py-2 text-sm text-center font-mono font-black text-green-400 uppercase tracking-widest outline-none focus:border-green-500 transition-colors"
                     />
                   </div>
 
@@ -412,7 +419,7 @@ export default function JugarApp() {
                       placeholder="Tu apodo"
                       value={nickname}
                       onChange={(e) => setNickname(e.target.value)}
-                      className="bg-slate-950/70 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white font-bold outline-none focus:border-cyan-500 transition-colors"
+                      className="bg-slate-950/70 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white font-bold outline-none focus:border-green-500 transition-colors"
                     />
                   </div>
 
@@ -425,7 +432,7 @@ export default function JugarApp() {
                       required
                       value={carrera}
                       onChange={(e) => setCarrera(e.target.value)}
-                      className="bg-slate-950/70 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white font-bold outline-none focus:border-cyan-500 transition-colors"
+                      className="bg-slate-950/70 border border-slate-800 rounded-xl px-3 py-2 text-sm text-white font-bold outline-none focus:border-green-500 transition-colors"
                     >
                       <option value="" disabled>Selecciona carrera...</option>
                       {carrerasDisponibles.map((c) => (
@@ -440,7 +447,7 @@ export default function JugarApp() {
                   <button
                     type="submit"
                     disabled={loadingRegistro}
-                    className="bg-cyan-500 text-slate-950 font-black text-xs tracking-widest uppercase rounded-xl py-3 mt-2 shadow-[0_0_15px_rgba(6,182,212,0.4)] flex items-center justify-center gap-2 hover:bg-cyan-400 active:scale-95 transition-all"
+                    className="bg-green-500 text-slate-950 font-black text-xs tracking-widest uppercase rounded-xl py-3 mt-2 shadow-[0_0_15px_rgba(34,197,94,0.4)] flex items-center justify-center gap-2 hover:bg-green-400 active:scale-95 transition-all"
                   >
                     {loadingRegistro ? (
                       <>
@@ -545,9 +552,16 @@ export default function JugarApp() {
               >
                 {/* Header */}
                 <div className="flex items-center justify-between px-4 py-3 border-b border-slate-900 bg-[#05030f]/60 backdrop-blur-sm relative z-10 flex-shrink-0">
-                  <span className="font-black text-cyan-400 tracking-widest text-[10px] uppercase">
-                    Conquista Relámpago
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <img 
+                      src="/assets/unipaz.jpg" 
+                      alt="UNIPAZ Logo" 
+                      className="w-5 h-5 rounded-full object-cover border border-green-500/30 shadow-[0_0_8px_rgba(34,197,94,0.2)]" 
+                    />
+                    <span className="font-black text-green-400 tracking-widest text-[10px] uppercase">
+                      Conquista Relámpago
+                    </span>
+                  </div>
                   <div className="flex items-center gap-1.5 bg-green-500/15 border border-green-500/30 px-2 py-0.5 rounded-full">
                     <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
                     <span className="text-[8px] font-black text-green-400 tracking-wider uppercase">Defendiendo</span>
@@ -575,10 +589,10 @@ export default function JugarApp() {
                           onClick={() => setActiveTab(id as any)}
                           className="flex-1 flex flex-col items-center gap-1.5 py-1 transition-opacity active:opacity-60"
                         >
-                          <div className={`relative p-1 rounded-lg transition-all duration-200 ${active ? 'bg-cyan-500/10' : ''}`}>
-                            <Icon className={`w-4.5 h-4.5 transition-colors duration-200 ${active ? 'text-cyan-400' : 'text-slate-500'}`} />
+                          <div className={`relative p-1 rounded-lg transition-all duration-200 ${active ? 'bg-green-500/10' : ''}`}>
+                            <Icon className={`w-4.5 h-4.5 transition-colors duration-200 ${active ? 'text-green-400' : 'text-slate-500'}`} />
                           </div>
-                          <span className={`text-[8px] font-black tracking-wider uppercase transition-colors duration-200 ${active ? 'text-cyan-400' : 'text-slate-600'}`}>
+                          <span className={`text-[8px] font-black tracking-wider uppercase transition-colors duration-200 ${active ? 'text-green-400' : 'text-slate-600'}`}>
                             {label}
                           </span>
                         </button>

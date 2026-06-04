@@ -257,23 +257,25 @@ export default function AdminApp() {
 
       {/* Header */}
       <header className="relative z-10 flex flex-col md:flex-row justify-between items-center bg-[#140e2e]/40 border border-slate-800/80 rounded-2xl py-4 px-6 backdrop-blur-md mb-6 gap-4">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-purple-500 flex items-center justify-center shadow-[0_0_15px_rgba(168,85,247,0.6)]">
-            <Settings className="w-5 h-5 text-slate-950 animate-spin" style={{ animationDuration: '6s' }} />
-          </div>
+        <div className="flex items-center gap-3">
+          <img 
+            src="/assets/unipaz.jpg" 
+            alt="UNIPAZ Logo" 
+            className="w-12 h-12 rounded-full border border-green-500/50 object-cover shadow-[0_0_15px_rgba(34,197,94,0.4)]"
+          />
           <div>
-            <h1 className="text-lg lg:text-xl font-black tracking-widest bg-gradient-to-r from-purple-400 to-indigo-500 bg-clip-text text-transparent uppercase">
+            <h1 className="text-lg lg:text-xl font-black tracking-widest bg-gradient-to-r from-green-400 via-white to-blue-500 bg-clip-text text-transparent uppercase">
               Panel de Control del Expositor
             </h1>
             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">
-              Control en Tiempo Real · Conquista Relámpago
+              Control en Tiempo Real · Conquista Relámpago · UNIPAZ
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">PIN de la partida:</span>
-          <span className="font-mono text-2xl font-black text-cyan-400 drop-shadow-[0_0_8px_rgba(6,182,212,0.4)]">
+          <span className="font-mono text-2xl font-black text-green-400 drop-shadow-[0_0_8px_rgba(34,197,94,0.4)]">
             {pin}
           </span>
         </div>

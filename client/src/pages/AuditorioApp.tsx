@@ -205,7 +205,7 @@ export default function AuditorioApp() {
 
   const playUrl = pin !== '----' ? `${SERVER_URL}/jugar.html?pin=${pin}` : '';
   const qrCodeUrl = playUrl 
-    ? `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(playUrl)}&color=06b6d4&bgcolor=050814`
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(playUrl)}&color=22c55e&bgcolor=050814`
     : '';
 
   return (
@@ -214,18 +214,22 @@ export default function AuditorioApp() {
       
       {/* Header */}
       <header className="relative z-10 flex flex-col sm:flex-row justify-between items-center bg-[#140e2e]/40 border border-slate-800/80 rounded-2xl py-4 px-6 backdrop-blur-md mb-6 gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-cyan-500 flex items-center justify-center shadow-[0_0_15px_rgba(6,182,212,0.6)]">
-              <Zap className="w-5 h-5 text-slate-950" fill="currentColor" />
+        <div className="flex items-center gap-3">
+          <img 
+            src="/assets/unipaz.jpg" 
+            alt="UNIPAZ Logo" 
+            className="w-12 h-12 rounded-full border border-green-500/50 object-cover shadow-[0_0_15px_rgba(34,197,94,0.4)]"
+          />
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl lg:text-2xl font-black tracking-widest bg-gradient-to-r from-green-400 via-white to-blue-500 bg-clip-text text-transparent uppercase">
+                Conquista Relámpago
+              </h1>
             </div>
-            <h1 className="text-xl lg:text-2xl font-black tracking-widest bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent uppercase">
-              Conquista Relámpago
-            </h1>
+            <p className="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-wider mt-0.5">
+              Pantalla del Auditorio · Blitz Territorial Académico · UNIPAZ
+            </p>
           </div>
-          <p className="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-wider mt-1">
-            Pantalla del Auditorio · Blitz Territorial Académico
-          </p>
         </div>
 
         <div className="flex items-center gap-6 bg-slate-950/40 border border-slate-800 rounded-xl px-4 py-2">
@@ -246,7 +250,7 @@ export default function AuditorioApp() {
           
           {/* Partida Info Card */}
           <div className="bg-[#140e2e]/50 border border-slate-800/80 rounded-3xl p-5 flex flex-col gap-4 backdrop-blur-md relative overflow-hidden">
-            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-cyan-500 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-green-500 via-transparent to-transparent pointer-events-none" />
             
             <h2 className="text-slate-400 text-xs font-bold tracking-widest uppercase border-b border-slate-800/60 pb-2">
               Estado de la Partida
@@ -254,7 +258,7 @@ export default function AuditorioApp() {
 
             <div className="flex justify-between items-center py-1">
               <span className="text-sm font-semibold text-slate-300">Usuarios Conectados</span>
-              <div className="flex items-center gap-1.5 bg-cyan-500/10 border border-cyan-500/20 px-3 py-1 rounded-full text-cyan-400 font-bold text-sm">
+              <div className="flex items-center gap-1.5 bg-green-500/10 border border-green-500/20 px-3 py-1 rounded-full text-green-400 font-bold text-sm">
                 <Users className="w-4 h-4" />
                 {usuariosConectados}
               </div>
@@ -262,7 +266,7 @@ export default function AuditorioApp() {
 
             <div className="flex justify-between items-center py-1 border-t border-slate-800/40 pt-3">
               <span className="text-sm font-semibold text-slate-300">Tiempo de Juego</span>
-              <span className="font-mono text-2xl font-black text-cyan-400 drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]">
+              <span className="font-mono text-2xl font-black text-blue-400 drop-shadow-[0_0_8px_rgba(37,99,235,0.5)]">
                 {formatearTiempo(tiempoGlobal)}
               </span>
             </div>
@@ -271,7 +275,7 @@ export default function AuditorioApp() {
           {/* QR Code Card */}
           {estadoJuego !== 'finalizado' && (
             <div className="bg-[#140e2e]/50 border border-slate-800/80 rounded-3xl p-5 flex flex-col items-center justify-center text-center gap-4 backdrop-blur-md relative overflow-hidden">
-              <div className="absolute inset-0 opacity-5 bg-[radial-gradient(ellipse_at_center,_rgba(234,179,8,0.5),_transparent)] pointer-events-none" />
+              <div className="absolute inset-0 opacity-5 bg-[radial-gradient(ellipse_at_center,_rgba(34,197,94,0.5),_transparent)] pointer-events-none" />
               
               <div>
                 <h3 className="text-white font-black text-sm tracking-wider uppercase">¡Únete a la Batalla!</h3>
@@ -279,7 +283,7 @@ export default function AuditorioApp() {
               </div>
 
               {qrCodeUrl ? (
-                <div className="p-3 bg-[#050814] border-2 border-cyan-500/40 rounded-2xl shadow-[0_0_20px_rgba(6,182,212,0.15)]">
+                <div className="p-3 bg-[#050814] border-2 border-green-500/40 rounded-2xl shadow-[0_0_20px_rgba(34,197,94,0.15)]">
                   <img src={qrCodeUrl} alt="QR Code" className="w-36 h-36 rounded-lg" />
                 </div>
               ) : (
@@ -288,7 +292,7 @@ export default function AuditorioApp() {
                 </div>
               )}
               
-              <span className="text-[10px] font-mono text-cyan-400/70 select-all break-all px-2 max-w-full truncate">
+              <span className="text-[10px] font-mono text-green-400/70 select-all break-all px-2 max-w-full truncate">
                 {playUrl || 'Generando PIN de juego...'}
               </span>
             </div>
@@ -308,7 +312,7 @@ export default function AuditorioApp() {
                     cy="32" 
                     r="26" 
                     fill="none" 
-                    stroke={tiempoRonda > 5 ? '#06b6d4' : '#ef4444'} 
+                    stroke={tiempoRonda > 5 ? '#22c55e' : '#ef4444'} 
                     strokeWidth="4"
                     strokeDasharray={`${2 * Math.PI * 26}`}
                     strokeDashoffset={`${2 * Math.PI * 26 * (1 - (tiempoRonda / maxTiempoRonda))}`}
@@ -317,7 +321,7 @@ export default function AuditorioApp() {
                   />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className={`font-mono font-black text-3xl ${tiempoRonda > 5 ? 'text-cyan-400' : 'text-red-400'}`}>
+                  <span className={`font-mono font-black text-3xl ${tiempoRonda > 5 ? 'text-green-400' : 'text-red-400'}`}>
                     {tiempoRonda}
                   </span>
                 </div>
@@ -347,13 +351,13 @@ export default function AuditorioApp() {
                 Mapa Territorial
               </span>
               
-              {/* Circular Interactive Map */}
-              <div className="relative w-full max-w-[380px] aspect-square bg-[#0b0a1a]/30 border border-slate-800/40 rounded-full overflow-hidden flex items-center justify-center shadow-[0_0_50px_rgba(0,0,0,0.5)]">
-                {/* Background Image of Map */}
+              {/* Rectangular Map Container with rounded corners */}
+              <div className="relative w-full max-w-[420px] aspect-square bg-[#0b0a1a]/30 border border-slate-800/40 rounded-2xl overflow-hidden flex items-center justify-center shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+                {/* Background Image of Map (No rounded-full crop) */}
                 <img
                   src="/assets/mapa-conquista.png"
                   alt="Mapa Conquista"
-                  className="absolute inset-0 w-full h-full object-cover opacity-80 rounded-full"
+                  className="absolute inset-0 w-full h-full object-cover opacity-80"
                 />
 
                 {/* SVG Sectors Overlay */}
