@@ -252,11 +252,11 @@ export default function AdminApp() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#05030f] overflow-x-hidden flex flex-col font-sans text-white p-4 lg:p-6">
+    <div className="relative min-h-screen bg-white overflow-x-hidden flex flex-col font-sans text-slate-900 p-4 lg:p-6">
       <StarField />
 
       {/* Header */}
-      <header className="relative z-10 flex flex-col md:flex-row justify-between items-center bg-[#140e2e]/40 border border-slate-800/80 rounded-2xl py-4 px-6 backdrop-blur-md mb-6 gap-4">
+      <header className="relative z-10 flex flex-col md:flex-row justify-between items-center bg-slate-50/80 border border-slate-200 rounded-2xl py-4 px-6 backdrop-blur-md mb-6 gap-4 shadow-sm">
         <div className="flex items-center gap-3">
           <img 
             src="/assets/unipaz.jpg" 
@@ -264,37 +264,37 @@ export default function AdminApp() {
             className="w-12 h-12 rounded-full border border-green-500/50 object-cover shadow-[0_0_15px_rgba(34,197,94,0.4)]"
           />
           <div>
-            <h1 className="text-lg lg:text-xl font-black tracking-widest bg-gradient-to-r from-green-400 via-white to-blue-500 bg-clip-text text-transparent uppercase">
+            <h1 className="text-lg lg:text-xl font-black tracking-widest bg-gradient-to-r from-green-600 via-slate-900 to-blue-600 bg-clip-text text-transparent uppercase">
               Panel de Control del Expositor
             </h1>
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">
               Control en Tiempo Real · Conquista Relámpago · UNIPAZ
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">PIN de la partida:</span>
-          <span className="font-mono text-2xl font-black text-green-400 drop-shadow-[0_0_8px_rgba(34,197,94,0.4)]">
+          <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">PIN de la partida:</span>
+          <span className="font-mono text-2xl font-black text-green-600 drop-shadow-[0_0_8px_rgba(34,197,94,0.4)]">
             {pin}
           </span>
         </div>
       </header>
 
       {/* Control de Flujo Principal */}
-      <section className="relative z-10 grid grid-cols-1 md:grid-cols-4 gap-4 bg-slate-950/40 border border-slate-950 p-4 rounded-2xl mb-6 backdrop-blur-sm items-center">
-        <div className="text-xs text-slate-400 font-bold uppercase tracking-wider">
+      <section className="relative z-10 grid grid-cols-1 md:grid-cols-4 gap-4 bg-slate-100 border border-slate-200 p-4 rounded-2xl mb-6 shadow-sm items-center">
+        <div className="text-xs text-slate-600 font-bold uppercase tracking-wider">
           <span>Estado del Juego: </span>
-          <span className="text-yellow-400 font-black">{estadoJuego}</span>
+          <span className="text-yellow-600 font-black">{estadoJuego}</span>
           <span className="mx-2">|</span>
           <span>Usuarios: </span>
-          <span className="text-cyan-400 font-black">{usuariosConectados}</span>
+          <span className="text-blue-600 font-black">{usuariosConectados}</span>
         </div>
 
         <button
           onClick={handleCrearPartida}
           disabled={estadoJuego === 'JUGANDO'}
-          className="bg-purple-600 hover:bg-purple-500 disabled:opacity-50 py-3 rounded-xl font-black text-xs tracking-widest uppercase shadow-[0_0_12px_rgba(147,51,234,0.3)] transition-all active:scale-95 flex items-center justify-center gap-1.5"
+          className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white py-3 rounded-xl font-black text-xs tracking-widest uppercase shadow-[0_0_12px_rgba(37,99,235,0.2)] transition-all active:scale-95 flex items-center justify-center gap-1.5"
         >
           <Zap className="w-4 h-4" />
           Crear Partida
@@ -303,7 +303,7 @@ export default function AdminApp() {
         <button
           onClick={handleIniciarJuego}
           disabled={estadoJuego !== 'ESPERA' || carrerasConfiguradas.length < 2}
-          className="bg-green-600 hover:bg-green-500 disabled:opacity-50 py-3 rounded-xl font-black text-xs tracking-widest uppercase shadow-[0_0_12px_rgba(34,197,94,0.3)] transition-all active:scale-95 flex items-center justify-center gap-1.5"
+          className="bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white py-3 rounded-xl font-black text-xs tracking-widest uppercase shadow-[0_0_12px_rgba(34,197,94,0.3)] transition-all active:scale-95 flex items-center justify-center gap-1.5"
         >
           <Play className="w-4 h-4" />
           Iniciar Juego
@@ -312,7 +312,7 @@ export default function AdminApp() {
         <button
           onClick={handleFinalizarJuego}
           disabled={estadoJuego !== 'JUGANDO'}
-          className="bg-red-600 hover:bg-red-500 disabled:opacity-50 py-3 rounded-xl font-black text-xs tracking-widest uppercase shadow-[0_0_12px_rgba(239,68,68,0.3)] transition-all active:scale-95 flex items-center justify-center gap-1.5"
+          className="bg-red-650 hover:bg-red-500 disabled:opacity-50 text-white py-3 rounded-xl font-black text-xs tracking-widest uppercase shadow-[0_0_12px_rgba(239,68,68,0.2)] transition-all active:scale-95 flex items-center justify-center gap-1.5"
         >
           <Square className="w-4 h-4" />
           Finalizar Juego
@@ -324,8 +324,8 @@ export default function AdminApp() {
         
         {/* Left column: Setup Carreras */}
         <section className="lg:col-span-4 flex flex-col gap-6">
-          <div className="bg-[#140e2e]/50 border border-slate-800/80 rounded-3xl p-5 flex flex-col gap-4 backdrop-blur-md">
-            <h2 className="text-slate-400 text-xs font-bold tracking-widest uppercase border-b border-slate-800/60 pb-2">
+          <div className="bg-slate-50 border border-slate-200 rounded-3xl p-5 flex flex-col gap-4 shadow-sm">
+            <h2 className="text-slate-600 text-xs font-bold tracking-widest uppercase border-b border-slate-200 pb-2">
               1. Configurar Carreras
             </h2>
 
@@ -335,11 +335,11 @@ export default function AdminApp() {
                 placeholder="Ej: Medicina"
                 value={nuevaCarrera}
                 onChange={(e) => setNuevaCarrera(e.target.value)}
-                className="flex-1 bg-slate-950/70 border border-slate-800 rounded-xl px-3 py-2 text-sm font-semibold outline-none focus:border-purple-500"
+                className="flex-1 bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm font-semibold outline-none focus:border-green-500 text-slate-900"
               />
               <button
                 onClick={handleAgregarCarrera}
-                className="bg-purple-600 hover:bg-purple-500 p-2.5 rounded-xl transition-all active:scale-95 shadow-[0_0_10px_rgba(147,51,234,0.3)]"
+                className="bg-blue-600 hover:bg-blue-500 text-white p-2.5 rounded-xl transition-all active:scale-95 shadow-[0_0_10px_rgba(37,99,235,0.2)]"
               >
                 <Plus className="w-4.5 h-4.5" />
               </button>
@@ -347,18 +347,18 @@ export default function AdminApp() {
 
             <ul className="flex flex-col gap-2 max-h-36 overflow-y-auto no-scrollbar py-1">
               {carrerasLocales.map((c, i) => (
-                <li key={i} className="flex justify-between items-center bg-slate-950/30 border border-slate-800/60 px-3 py-2 rounded-xl text-xs font-bold">
+                <li key={i} className="flex justify-between items-center bg-white border border-slate-200 px-3 py-2 rounded-xl text-xs font-bold text-slate-800">
                   <span className="truncate">{c}</span>
                   <button
                     onClick={() => handleEliminarCarrera(i)}
-                    className="text-red-400 hover:text-red-300 p-1 transition-colors"
+                    className="text-red-500 hover:text-red-700 p-1 transition-colors"
                   >
                     <Trash className="w-4 h-4" />
                   </button>
                 </li>
               ))}
               {carrerasLocales.length === 0 && (
-                <li className="text-center text-xs text-slate-500 py-4 font-semibold uppercase">
+                <li className="text-center text-xs text-slate-400 py-4 font-semibold uppercase">
                   Agrega carreras para iniciar
                 </li>
               )}
@@ -367,7 +367,7 @@ export default function AdminApp() {
             <button
               onClick={handleGuardarCarreras}
               disabled={carrerasLocales.length < 2 || carrerasLocales.length > 6}
-              className="w-full bg-slate-800 hover:bg-slate-700 disabled:opacity-50 py-2.5 rounded-xl font-bold text-xs tracking-wider uppercase transition-colors"
+              className="w-full bg-slate-200 hover:bg-slate-300 disabled:opacity-50 text-slate-800 border border-slate-300 py-2.5 rounded-xl font-bold text-xs tracking-wider uppercase transition-colors"
             >
               Autorizar y Enviar
             </button>

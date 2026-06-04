@@ -205,15 +205,15 @@ export default function AuditorioApp() {
 
   const playUrl = pin !== '----' ? `${SERVER_URL}/jugar.html?pin=${pin}` : '';
   const qrCodeUrl = playUrl 
-    ? `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(playUrl)}&color=22c55e&bgcolor=050814`
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(playUrl)}&color=22c55e&bgcolor=f1f5f9`
     : '';
 
   return (
-    <div className="relative min-h-screen bg-[#05030f] overflow-hidden flex flex-col font-sans text-white p-4 lg:p-6">
+    <div className="relative min-h-screen bg-white overflow-hidden flex flex-col font-sans text-slate-950 p-4 lg:p-6">
       <StarField />
       
       {/* Header */}
-      <header className="relative z-10 flex flex-col sm:flex-row justify-between items-center bg-[#140e2e]/40 border border-slate-800/80 rounded-2xl py-4 px-6 backdrop-blur-md mb-6 gap-4">
+      <header className="relative z-10 flex flex-col sm:flex-row justify-between items-center bg-slate-50/80 border border-slate-200 rounded-2xl py-4 px-6 backdrop-blur-md mb-6 gap-4 shadow-sm">
         <div className="flex items-center gap-3">
           <img 
             src="/assets/unipaz.jpg" 
@@ -222,20 +222,20 @@ export default function AuditorioApp() {
           />
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl lg:text-2xl font-black tracking-widest bg-gradient-to-r from-green-400 via-white to-blue-500 bg-clip-text text-transparent uppercase">
+              <h1 className="text-xl lg:text-2xl font-black tracking-widest bg-gradient-to-r from-green-600 via-slate-900 to-blue-600 bg-clip-text text-transparent uppercase">
                 Conquista Relámpago
               </h1>
             </div>
-            <p className="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-wider mt-0.5">
+            <p className="text-[10px] sm:text-xs text-slate-500 font-bold uppercase tracking-wider mt-0.5">
               Pantalla del Auditorio · Blitz Territorial Académico · UNIPAZ
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-6 bg-slate-950/40 border border-slate-800 rounded-xl px-4 py-2">
+        <div className="flex items-center gap-6 bg-slate-100 border border-slate-200 rounded-xl px-4 py-2">
           <div className="text-center sm:text-right">
             <span className="text-[10px] text-slate-500 font-bold tracking-widest uppercase block">PIN de acceso</span>
-            <span className="font-mono text-2xl lg:text-3xl font-black text-yellow-400 tracking-widest drop-shadow-[0_0_8px_rgba(234,179,8,0.4)]">
+            <span className="font-mono text-2xl lg:text-3xl font-black text-green-600 tracking-widest drop-shadow-[0_0_8px_rgba(34,197,94,0.4)]">
               {pin}
             </span>
           </div>
@@ -249,24 +249,24 @@ export default function AuditorioApp() {
         <section className="lg:col-span-4 flex flex-col gap-6">
           
           {/* Partida Info Card */}
-          <div className="bg-[#140e2e]/50 border border-slate-800/80 rounded-3xl p-5 flex flex-col gap-4 backdrop-blur-md relative overflow-hidden">
+          <div className="bg-slate-50/80 border border-slate-200 rounded-3xl p-5 flex flex-col gap-4 backdrop-blur-md relative overflow-hidden shadow-sm">
             <div className="absolute inset-0 opacity-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-green-500 via-transparent to-transparent pointer-events-none" />
             
-            <h2 className="text-slate-400 text-xs font-bold tracking-widest uppercase border-b border-slate-800/60 pb-2">
+            <h2 className="text-slate-500 text-xs font-bold tracking-widest uppercase border-b border-slate-200 pb-2">
               Estado de la Partida
             </h2>
 
             <div className="flex justify-between items-center py-1">
-              <span className="text-sm font-semibold text-slate-300">Usuarios Conectados</span>
-              <div className="flex items-center gap-1.5 bg-green-500/10 border border-green-500/20 px-3 py-1 rounded-full text-green-400 font-bold text-sm">
+              <span className="text-sm font-semibold text-slate-700">Usuarios Conectados</span>
+              <div className="flex items-center gap-1.5 bg-green-500/10 border border-green-500/20 px-3 py-1 rounded-full text-green-600 font-bold text-sm">
                 <Users className="w-4 h-4" />
                 {usuariosConectados}
               </div>
             </div>
 
-            <div className="flex justify-between items-center py-1 border-t border-slate-800/40 pt-3">
-              <span className="text-sm font-semibold text-slate-300">Tiempo de Juego</span>
-              <span className="font-mono text-2xl font-black text-blue-400 drop-shadow-[0_0_8px_rgba(37,99,235,0.5)]">
+            <div className="flex justify-between items-center py-1 border-t border-slate-200 pt-3">
+              <span className="text-sm font-semibold text-slate-700">Tiempo de Juego</span>
+              <span className="font-mono text-2xl font-black text-blue-600 drop-shadow-[0_0_8px_rgba(37,99,235,0.3)]">
                 {formatearTiempo(tiempoGlobal)}
               </span>
             </div>
@@ -274,25 +274,25 @@ export default function AuditorioApp() {
 
           {/* QR Code Card */}
           {estadoJuego !== 'finalizado' && (
-            <div className="bg-[#140e2e]/50 border border-slate-800/80 rounded-3xl p-5 flex flex-col items-center justify-center text-center gap-4 backdrop-blur-md relative overflow-hidden">
-              <div className="absolute inset-0 opacity-5 bg-[radial-gradient(ellipse_at_center,_rgba(34,197,94,0.5),_transparent)] pointer-events-none" />
+            <div className="bg-slate-50/80 border border-slate-200 rounded-3xl p-5 flex flex-col items-center justify-center text-center gap-4 backdrop-blur-md relative overflow-hidden shadow-sm">
+              <div className="absolute inset-0 opacity-5 bg-[radial-gradient(ellipse_at_center,_rgba(34,197,94,0.3),_transparent)] pointer-events-none" />
               
               <div>
-                <h3 className="text-white font-black text-sm tracking-wider uppercase">¡Únete a la Batalla!</h3>
-                <p className="text-[10px] text-slate-400 mt-1">Escanea con tu celular para participar</p>
+                <h3 className="text-slate-900 font-black text-sm tracking-wider uppercase">¡Únete a la Batalla!</h3>
+                <p className="text-[10px] text-slate-500 mt-1">Escanea con tu celular para participar</p>
               </div>
 
               {qrCodeUrl ? (
-                <div className="p-3 bg-[#050814] border-2 border-green-500/40 rounded-2xl shadow-[0_0_20px_rgba(34,197,94,0.15)]">
+                <div className="p-3 bg-slate-100 border-2 border-green-500/40 rounded-2xl shadow-[0_0_20px_rgba(34,197,94,0.1)]">
                   <img src={qrCodeUrl} alt="QR Code" className="w-36 h-36 rounded-lg" />
                 </div>
               ) : (
-                <div className="w-36 h-36 border border-dashed border-slate-700 rounded-2xl flex items-center justify-center text-slate-500">
+                <div className="w-36 h-36 border border-dashed border-slate-300 rounded-2xl flex items-center justify-center text-slate-400">
                   <QrCode className="w-10 h-10 animate-pulse" />
                 </div>
               )}
               
-              <span className="text-[10px] font-mono text-green-400/70 select-all break-all px-2 max-w-full truncate">
+              <span className="text-[10px] font-mono text-green-600/80 select-all break-all px-2 max-w-full truncate">
                 {playUrl || 'Generando PIN de juego...'}
               </span>
             </div>
@@ -300,8 +300,8 @@ export default function AuditorioApp() {
 
           {/* Ronda Timer Card */}
           {preguntaEnCurso && (
-            <div className="bg-[#140e2e]/60 border border-red-500/30 rounded-3xl p-5 flex flex-col items-center justify-center text-center gap-4 backdrop-blur-md relative overflow-hidden shadow-[0_0_30px_rgba(239,68,68,0.1)] animate-pulse">
-              <span className="text-red-400 text-xs font-black tracking-widest uppercase">
+            <div className="bg-slate-50/90 border border-red-500/20 rounded-3xl p-5 flex flex-col items-center justify-center text-center gap-4 backdrop-blur-md relative overflow-hidden shadow-[0_0_15px_rgba(239,68,68,0.05)] animate-pulse">
+              <span className="text-red-500 text-xs font-black tracking-widest uppercase">
                 Tiempo de la Pregunta
               </span>
               <div className="relative w-24 h-24">
@@ -334,11 +334,11 @@ export default function AuditorioApp() {
         <section className="lg:col-span-8 flex flex-col gap-6 justify-between">
           
           {/* Battle Log Box */}
-          <div className="bg-[#140e2e]/50 border border-slate-800/80 rounded-2xl px-5 py-3 backdrop-blur-md text-center">
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3 shadow-sm text-center">
             <span className="text-[10px] text-slate-500 font-bold tracking-widest uppercase block mb-1">
               Registro de Actividad
             </span>
-            <p className="text-sm font-black tracking-wide text-cyan-300">
+            <p className="text-sm font-black tracking-wide text-blue-600">
               {rondaResumen || 'Esperando inicio del juego...'}
             </p>
           </div>
@@ -346,13 +346,13 @@ export default function AuditorioApp() {
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 flex-1 items-stretch">
             
             {/* Map Container */}
-            <div className="md:col-span-7 bg-[#140e2e]/40 border border-slate-800/80 rounded-3xl p-6 flex flex-col items-center justify-center relative backdrop-blur-md min-h-[420px]">
+            <div className="md:col-span-7 bg-slate-50 border border-slate-200 rounded-3xl p-6 flex flex-col items-center justify-center relative shadow-sm min-h-[420px]">
               <span className="absolute top-4 text-xs font-black text-slate-500 tracking-widest uppercase">
                 Mapa Territorial
               </span>
               
               {/* Rectangular Map Container with rounded corners */}
-              <div className="relative w-full max-w-[420px] aspect-square bg-[#0b0a1a]/30 border border-slate-800/40 rounded-2xl overflow-hidden flex items-center justify-center shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+              <div className="relative w-full max-w-[420px] aspect-square bg-slate-100 border border-slate-200 rounded-2xl overflow-hidden flex items-center justify-center shadow-md">
                 {/* Background Image of Map (No rounded-full crop) */}
                 <img
                   src="/assets/mapa-conquista.png"
@@ -414,7 +414,7 @@ export default function AuditorioApp() {
                             width={96} 
                             height={24} 
                             rx="12"
-                            fill="#05030fee" 
+                            fill="#fffffeee" 
                             stroke={ownerColor} 
                             strokeWidth="1.5" 
                             opacity={hasOwner || isAttacked ? 1 : 0.6}
@@ -425,7 +425,7 @@ export default function AuditorioApp() {
                             textAnchor="middle" 
                             fontSize="9"
                             fontWeight="800" 
-                            fill={isAttacked ? '#facc15' : '#ffffff'}
+                            fill={isAttacked ? '#eab308' : '#0f172a'}
                             className="font-mono tracking-wide uppercase select-none"
                           >
                             {isAttacked ? '⚠️ ATAQUE' : hasOwner ? dueño.substring(0, 12) : s.label}
@@ -449,15 +449,15 @@ export default function AuditorioApp() {
             </div>
 
             {/* Live Leaderboard for Active Round */}
-            <div className="md:col-span-5 bg-[#140e2e]/40 border border-slate-800/80 rounded-3xl p-5 flex flex-col backdrop-blur-md min-h-[420px]">
-              <h2 className="text-slate-400 text-xs font-bold tracking-widest uppercase border-b border-slate-800/60 pb-3 flex items-center justify-between">
+            <div className="md:col-span-5 bg-slate-50 border border-slate-200 rounded-3xl p-5 flex flex-col shadow-sm min-h-[420px]">
+              <h2 className="text-slate-500 text-xs font-bold tracking-widest uppercase border-b border-slate-200 pb-3 flex items-center justify-between">
                 <span>Ronda Activa</span>
-                <span className="text-[10px] text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-full">Aciertos</span>
+                <span className="text-[10px] text-green-600 bg-green-500/10 px-2 py-0.5 rounded-full">Aciertos</span>
               </h2>
 
               <div className="flex-1 flex flex-col justify-center gap-3.5 py-4">
                 {carreras.length === 0 ? (
-                  <div className="text-center text-slate-500 text-xs py-10 font-bold">
+                  <div className="text-center text-slate-400 text-xs py-10 font-bold">
                     Esperando configuración de carreras...
                   </div>
                 ) : (
@@ -470,10 +470,10 @@ export default function AuditorioApp() {
                     return (
                       <div key={carrera} className="flex flex-col gap-1">
                         <div className="flex justify-between items-center text-xs font-black">
-                          <span className="truncate text-slate-300 max-w-[150px]">{carrera}</span>
+                          <span className="truncate text-slate-800 max-w-[150px]">{carrera}</span>
                           <span style={{ color }}>{aciertos} aciertos</span>
                         </div>
-                        <div className="w-full h-2.5 bg-slate-900 border border-slate-800 rounded-full overflow-hidden p-0.5">
+                        <div className="w-full h-2.5 bg-slate-200 border border-slate-300 rounded-full overflow-hidden p-0.5">
                           <div 
                             className="h-full rounded-full transition-all duration-500" 
                             style={{ 
@@ -489,7 +489,7 @@ export default function AuditorioApp() {
                 )}
               </div>
 
-              <div className="text-[9px] text-slate-500 text-center font-bold tracking-wider border-t border-slate-800/60 pt-2.5 uppercase">
+              <div className="text-[9px] text-slate-450 text-center font-bold tracking-wider border-t border-slate-200 pt-2.5 uppercase">
                 Actualización en Tiempo Real
               </div>
             </div>
@@ -499,14 +499,14 @@ export default function AuditorioApp() {
 
       {/* Podio Overlay Modal on Game Finalized */}
       {estadoJuego === 'finalizado' && podio.length > 0 && (
-        <div className="absolute inset-0 bg-[#05030f]/90 z-50 flex items-center justify-center p-4 backdrop-blur-lg animate-fade-in">
-          <div className="bg-[#0b071e]/90 border border-yellow-500/30 rounded-[36px] max-w-[620px] w-full p-8 shadow-[0_0_80px_rgba(234,179,8,0.15)] flex flex-col items-center text-center gap-6">
+        <div className="absolute inset-0 bg-white/95 z-50 flex items-center justify-center p-4 backdrop-blur-lg animate-fade-in">
+          <div className="bg-slate-50 border border-green-500/30 rounded-[36px] max-w-[620px] w-full p-8 shadow-[0_0_40px_rgba(34,197,94,0.15)] flex flex-col items-center text-center gap-6">
             <div className="text-7xl animate-bounce">🏆</div>
             <div>
-              <h2 className="text-yellow-400 font-black text-3xl tracking-widest uppercase">
+              <h2 className="text-green-700 font-black text-3xl tracking-widest uppercase">
                 ¡Conquista Finalizada!
               </h2>
-              <p className="text-slate-400 text-sm mt-1.5 font-bold tracking-wider">
+              <p className="text-slate-500 text-sm mt-1.5 font-bold tracking-wider">
                 Marcador Definitivo e Interfacultades
               </p>
             </div>
@@ -519,17 +519,17 @@ export default function AuditorioApp() {
                 const isThird = index === 2;
                 
                 let icon = '🎖️';
-                let style = 'bg-[#140e2e]/50 border-slate-800 text-slate-300';
+                let style = 'bg-white border-slate-200 text-slate-800 shadow-sm';
                 
                 if (isFirst) {
                   icon = '🥇';
-                  style = 'bg-yellow-500/10 border-yellow-500/50 text-yellow-400 shadow-[0_0_15px_rgba(234,179,8,0.2)]';
+                  style = 'bg-yellow-500/10 border-yellow-500/40 text-yellow-700 shadow-[0_0_15px_rgba(234,179,8,0.1)]';
                 } else if (isSecond) {
                   icon = '🥈';
-                  style = 'bg-slate-300/10 border-slate-300/50 text-slate-200';
+                  style = 'bg-slate-100 border-slate-300 text-slate-700';
                 } else if (isThird) {
                   icon = '🥉';
-                  style = 'bg-amber-700/10 border-amber-700/50 text-amber-600';
+                  style = 'bg-amber-700/10 border-amber-600/30 text-amber-800';
                 }
 
                 return (
