@@ -40,7 +40,7 @@ const SECTORES = [
   { key: 'INGENIERÍA', label: 'Ingeniería', emoji: '⚙️', color: '#06b6d4', dark: '#164e63', startDeg: 162,  endDeg: 234  },
 ];
 
-const PALETTE = ['#06b6d4', '#10b981', '#d946ef', '#eab308', '#f97316', '#3b82f6', '#ef4444'];
+const PALETTE = ['#2563eb', '#16a34a', '#0284c7', '#059669', '#3b82f6', '#10b981', '#0d9488'];
 
 function obtenerColorCarrera(carrera: string, carrerasConfiguradas: string[]) {
   const key = carrera.toUpperCase();
@@ -306,7 +306,7 @@ export default function AuditorioApp() {
               </span>
               <div className="relative w-24 h-24">
                 <svg className="w-24 h-24 -rotate-90" viewBox="0 0 64 64">
-                  <circle cx="32" cy="32" r="26" fill="none" stroke="#1e293b" strokeWidth="4" />
+                  <circle cx="32" cy="32" r="26" fill="none" stroke="#e2e8f0" strokeWidth="4" />
                   <circle 
                     cx="32" 
                     cy="32" 

@@ -376,23 +376,23 @@ export default function AdminApp() {
           {/* Active Round control box */}
           {estadoJuego === 'JUGANDO' && (
             <div className="bg-yellow-500/5 border border-yellow-500/20 rounded-3xl p-5 flex flex-col gap-3.5 backdrop-blur-md">
-              <h2 className="text-yellow-400 text-xs font-black tracking-widest uppercase border-b border-yellow-500/20 pb-2">
+              <h2 className="text-yellow-600 text-xs font-black tracking-widest uppercase border-b border-yellow-500/20 pb-2">
                 Ronda Activa
               </h2>
 
               <div className="text-xs">
-                <span className="text-slate-400 font-bold block">Pregunta:</span>
-                <span className="text-white font-semibold truncate block mt-0.5">{preguntaActiva}</span>
+                <span className="text-slate-500 font-bold block">Pregunta:</span>
+                <span className="text-slate-900 font-semibold truncate block mt-0.5">{preguntaActiva}</span>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-xs">
-                  <span className="text-slate-400 font-bold block">Sector Objetivo:</span>
-                  <span className="text-white font-semibold uppercase block mt-0.5">{sectorActivo}</span>
+                  <span className="text-slate-500 font-bold block">Sector Objetivo:</span>
+                  <span className="text-slate-900 font-semibold uppercase block mt-0.5">{sectorActivo}</span>
                 </div>
                 <div className="text-xs">
-                  <span className="text-slate-400 font-bold block">Tiempo Ronda:</span>
-                  <span className="text-red-400 font-black text-sm block mt-0.5">{tiempoRonda}s</span>
+                  <span className="text-slate-500 font-bold block">Tiempo Ronda:</span>
+                  <span className="text-red-650 font-black text-sm block mt-0.5">{tiempoRonda}s</span>
                 </div>
               </div>
 
@@ -410,21 +410,21 @@ export default function AdminApp() {
         {/* Right column: Setup Questions and Bank */}
         <section className="lg:col-span-8 flex flex-col gap-6">
           {/* Create Question */}
-          <div className="bg-[#140e2e]/50 border border-slate-800/80 rounded-3xl p-5 backdrop-blur-md">
-            <h2 className="text-slate-400 text-xs font-bold tracking-widest uppercase border-b border-slate-800/60 pb-3 mb-4">
+          <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm">
+            <h2 className="text-slate-700 text-xs font-bold tracking-widest uppercase border-b border-slate-200 pb-3 mb-4">
               2. Crear Pregunta al Banco
             </h2>
 
             <form onSubmit={handleGuardarPregunta} className="flex flex-col gap-4">
               <div className="flex flex-col gap-1">
-                <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Texto de la Pregunta</label>
+                <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Texto de la Pregunta</label>
                 <input
                   type="text"
                   required
                   placeholder="¿Cuál es el resultado de...?"
                   value={textoPregunta}
                   onChange={(e) => setTextoPregunta(e.target.value)}
-                  className="bg-slate-950/70 border border-slate-800 rounded-xl px-3 py-2.5 text-sm font-semibold outline-none focus:border-purple-500"
+                  className="bg-slate-50 border border-slate-350 text-slate-900 rounded-xl px-3 py-2.5 text-sm font-semibold outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 transition-all placeholder-slate-400"
                 />
               </div>
 
@@ -443,7 +443,7 @@ export default function AdminApp() {
                       placeholder={`Opción ${opt.label}`}
                       value={opt.val}
                       onChange={(e) => opt.set(e.target.value)}
-                      className="bg-slate-950/70 border border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold outline-none focus:border-purple-500"
+                      className="bg-slate-50 border border-slate-350 text-slate-900 rounded-xl px-3 py-2 text-xs font-semibold outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 transition-all placeholder-slate-400"
                     />
                   </div>
                 ))}
@@ -451,11 +451,11 @@ export default function AdminApp() {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mt-1">
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Opción Correcta</label>
+                  <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Opción Correcta</label>
                   <select
                     value={correcta}
                     onChange={(e) => setCorrecta(e.target.value)}
-                    className="bg-slate-950/70 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold outline-none focus:border-purple-500"
+                    className="bg-slate-50 border border-slate-350 text-slate-900 rounded-xl px-3 py-2 text-xs font-bold outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 transition-all"
                   >
                     <option value="A">A</option>
                     <option value="B">B</option>
@@ -465,7 +465,7 @@ export default function AdminApp() {
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Tiempo de Ronda (s)</label>
+                  <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Tiempo de Ronda (s)</label>
                   <input
                     type="number"
                     min={5}
@@ -473,16 +473,16 @@ export default function AdminApp() {
                     required
                     value={tiempoPregunta}
                     onChange={(e) => setTiempoPregunta(parseInt(e.target.value) || 20)}
-                    className="bg-slate-950/70 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold outline-none focus:border-purple-500"
+                    className="bg-slate-50 border border-slate-350 text-slate-900 rounded-xl px-3 py-2 text-xs font-bold outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 transition-all"
                   />
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Sector Objetivo (Mapa)</label>
+                  <label className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Sector Objetivo (Mapa)</label>
                   <select
                     value={sectorObjetivo}
                     onChange={(e) => setSectorObjetivo(e.target.value)}
-                    className="bg-slate-950/70 border border-slate-800 rounded-xl px-3 py-2 text-xs font-bold outline-none focus:border-purple-500"
+                    className="bg-slate-50 border border-slate-350 text-slate-900 rounded-xl px-3 py-2 text-xs font-bold outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600 transition-all"
                   >
                     {SECTORES.map((s) => (
                       <option key={s.key} value={s.key}>{s.label}</option>
@@ -493,7 +493,7 @@ export default function AdminApp() {
 
               <button
                 type="submit"
-                className="bg-purple-600 hover:bg-purple-500 py-3 rounded-xl font-black text-xs tracking-widest uppercase shadow-[0_0_12px_rgba(147,51,234,0.25)] transition-all active:scale-95 mt-2"
+                className="bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-black text-xs tracking-widest uppercase shadow-[0_0_12px_rgba(37,99,235,0.2)] transition-all active:scale-95 mt-2"
               >
                 Guardar Pregunta en Servidor
               </button>
@@ -501,37 +501,37 @@ export default function AdminApp() {
           </div>
 
           {/* Saved Questions List */}
-          <div className="bg-[#140e2e]/50 border border-slate-800/80 rounded-3xl p-5 backdrop-blur-md">
-            <h2 className="text-slate-400 text-xs font-bold tracking-widest uppercase border-b border-slate-800/60 pb-3 mb-4">
+          <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm">
+            <h2 className="text-slate-700 text-xs font-bold tracking-widest uppercase border-b border-slate-200 pb-3 mb-4">
               3. Banco de Preguntas Cargadas
             </h2>
 
             <div className="flex flex-col gap-3.5 max-h-[300px] overflow-y-auto no-scrollbar py-1">
               {preguntasLocales.map((q, idx) => (
-                <div key={idx} className="bg-slate-950/30 border border-slate-800 p-4 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+                <div key={idx} className="bg-slate-50 border border-slate-200 p-4 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
                   <div className="flex-1 min-w-0">
-                    <span className="text-[10px] bg-purple-500/10 border border-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full uppercase font-black tracking-wider">
+                    <span className="text-[10px] bg-blue-500/10 border border-blue-500/20 text-blue-700 px-2 py-0.5 rounded-full uppercase font-black tracking-wider">
                       Pregunta {idx + 1}
                     </span>
-                    <p className="text-white font-black text-sm mt-1.5">{q.texto}</p>
-                    <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1.5 flex flex-wrap gap-x-3 gap-y-1">
-                      <span>Correcta: <strong className="text-green-400">{q.correcta}</strong></span>
-                      <span>Tiempo: <strong className="text-cyan-400">{q.tiempo}s</strong></span>
-                      <span>Sector: <strong className="text-yellow-400">{q.sector}</strong></span>
+                    <p className="text-slate-900 font-black text-sm mt-1.5">{q.texto}</p>
+                    <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-1.5 flex flex-wrap gap-x-3 gap-y-1">
+                      <span>Correcta: <strong className="text-green-600">{q.correcta}</strong></span>
+                      <span>Tiempo: <strong className="text-blue-600">{q.tiempo}s</strong></span>
+                      <span>Sector: <strong className="text-slate-700">{q.sector}</strong></span>
                     </div>
                   </div>
 
                   <button
                     onClick={() => handleLanzarPregunta(idx, q.sector)}
                     disabled={estadoJuego !== 'JUGANDO' || rondaEnCurso}
-                    className="bg-green-600 hover:bg-green-500 disabled:opacity-50 px-4 py-2.5 rounded-xl font-black text-[10px] tracking-widest uppercase shadow-[0_0_10px_rgba(34,197,94,0.2)] transition-all active:scale-95 shrink-0"
+                    className="bg-green-600 hover:bg-green-500 text-white disabled:opacity-50 px-4 py-2.5 rounded-xl font-black text-[10px] tracking-widest uppercase shadow-[0_0_10px_rgba(34,197,94,0.2)] transition-all active:scale-95 shrink-0"
                   >
                     🚀 Lanzar al Mapa
                   </button>
                 </div>
               ))}
               {preguntasLocales.length === 0 && (
-                <p className="text-center text-xs text-slate-500 py-6 font-semibold uppercase">
+                <p className="text-center text-xs text-slate-400 py-6 font-semibold uppercase">
                   No hay preguntas registradas en esta sesión
                 </p>
               )}
