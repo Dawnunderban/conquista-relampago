@@ -1,0 +1,188 @@
+/* Estilos Estructurales Mínimos y Agnósticos para Conquista Relámpago */
+
+/* Reinicio básico */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+  padding: 20px;
+  background-color: #fcfcfc;
+  color: #333;
+}
+
+/* Contenedores Principales */
+.contenedor {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 10px;
+}
+
+/* Clases de Visibilidad para la SPA Móvil y Transiciones */
+.seccion-pantalla {
+  display: none;
+}
+
+.seccion-pantalla.activa {
+  display: block !important;
+}
+
+/* Grillas y Flexbox básicos de estructura */
+.flex-fila {
+  display: flex;
+  flex-direction: row;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.flex-columna {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.centrado {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.espacio-entre {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Bloques del Mapa del Auditorio */
+.mapa-conquista {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin: 20px 0;
+}
+
+.sector-bloque {
+  border: 3px solid #ccc;
+  padding: 25px;
+  text-align: center;
+  border-radius: 8px;
+  background-color: #fff;
+  transition: all 0.3s ease;
+}
+
+.sector-bloque.atacado {
+  border-color: #f39c12;
+  animation: parpadeo-alerta 1.5s infinite;
+}
+
+@keyframes parpadeo-alerta {
+  0% { box-shadow: 0 0 5px rgba(243, 156, 18, 0.5); }
+  50% { box-shadow: 0 0 20px rgba(243, 156, 18, 0.9); }
+  100% { box-shadow: 0 0 5px rgba(243, 156, 18, 0.5); }
+}
+
+/* Marcadores y Votos en vivo */
+.lista-carreras-votos {
+  list-style: none;
+  padding: 0;
+}
+
+.fila-voto {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  margin-bottom: 5px;
+  border-left: 5px solid #aaa;
+  background-color: #eee;
+  border-radius: 4px;
+}
+
+/* Formularios de Administración y Jugador */
+form {
+  border: 1px solid #ddd;
+  padding: 20px;
+  border-radius: 6px;
+  background: #fbfbfb;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.grupo-form {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+input, select, textarea, button {
+  padding: 10px;
+  font-size: 1rem;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+}
+
+button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+/* Interfaz Móvil y Botones de Respuesta Gigantes */
+.opciones-respuestas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.btn-respuesta {
+  height: 80px;
+  font-size: 1.5rem;
+  font-weight: bold;
+  border: 2px solid #333;
+}
+
+.btn-respuesta.a { background-color: #ff4d4d; color: white; }
+.btn-respuesta.b { background-color: #4da6ff; color: white; }
+.btn-respuesta.c { background-color: #ffd11a; color: black; }
+.btn-respuesta.d { background-color: #4dff4d; color: black; }
+
+/* Contenedor QR */
+#contenedor-qr {
+  margin: 15px auto;
+  padding: 10px;
+  border: 2px dashed #999;
+  display: inline-block;
+  background: white;
+}
+
+/* Podio final */
+.podio-item {
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+}
+
+.podio-1 { background-color: #ffd700; color: #333; border: 2px solid #ccac00; }
+.podio-2 { background-color: #c0c0c0; color: #333; border: 2px solid #a0a0a0; }
+.podio-3 { background-color: #cd7f32; color: #white; border: 2px solid #a05010; }
+.podio-otro { background-color: #e0e0e0; color: #333; }
