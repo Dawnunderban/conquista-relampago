@@ -14,7 +14,7 @@ app.use(cors({
 }));
 
 // Servir archivos estáticos del frontend para facilitar pruebas locales e integración
-app.use(express.static(path.join(__dirname, '../client')));
+app.use(express.static(path.join(__dirname, '../client/dist')));
 
 const server = http.createServer(app);
 const io = socketIo(server, {
@@ -31,10 +31,11 @@ let gameState = {
   preguntas: [], // Banco de preguntas
   preguntaActualIndex: -1,
   mapa: {
-    "territorio-0": { nombre: "Sector Norte", dueño: "Libre" },
-    "territorio-1": { nombre: "Sector Centro", dueño: "Libre" },
-    "territorio-2": { nombre: "Sector Sur", dueño: "Libre" },
-    "territorio-3": { nombre: "Sector Este", dueño: "Libre" }
+    "MEDICINA": { nombre: "Sector Medicina", dueño: "Libre" },
+    "DERECHO": { nombre: "Sector Derecho", dueño: "Libre" },
+    "ARTE": { nombre: "Sector Arte", dueño: "Libre" },
+    "CIENCIAS": { nombre: "Sector Ciencias", dueño: "Libre" },
+    "INGENIERÍA": { nombre: "Sector Ingeniería", dueño: "Libre" }
   },
   jugadores: {}, // socket.id -> { nickname, carrera }
   marcadorRonda: {}, // carrera -> número de respuestas correctas en la ronda
@@ -71,10 +72,11 @@ function resetEstadoCompleto() {
   gameState.preguntas = [];
   gameState.preguntaActualIndex = -1;
   gameState.mapa = {
-    "territorio-0": { nombre: "Sector Norte", dueño: "Libre" },
-    "territorio-1": { nombre: "Sector Centro", dueño: "Libre" },
-    "territorio-2": { nombre: "Sector Sur", dueño: "Libre" },
-    "territorio-3": { nombre: "Sector Este", dueño: "Libre" }
+    "MEDICINA": { nombre: "Sector Medicina", dueño: "Libre" },
+    "DERECHO": { nombre: "Sector Derecho", dueño: "Libre" },
+    "ARTE": { nombre: "Sector Arte", dueño: "Libre" },
+    "CIENCIAS": { nombre: "Sector Ciencias", dueño: "Libre" },
+    "INGENIERÍA": { nombre: "Sector Ingeniería", dueño: "Libre" }
   };
   gameState.jugadores = {};
   gameState.marcadorRonda = {};

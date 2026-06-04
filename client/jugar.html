@@ -1,88 +1,12 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Conquista Relámpago - Jugador</title>
-  <link rel="stylesheet" href="css/estilos.css">
-  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-</head>
-<body>
-  <div class="contenedor flex-columna" style="max-width: 500px;">
-    
-    <header style="text-align: center; margin-bottom: 20px;">
-      <h2>⚡ Conquista Relámpago</h2>
-      <p>Modo Participante</p>
-    </header>
-
-    <!-- PANTALLA 1: REGISTRO -->
-    <section id="pantalla-registro" class="seccion-pantalla activa">
-      <form id="form-registro" onsubmit="return false;">
-        <h3>Ingreso al Juego</h3>
-        <p>Completa tus datos para unirte a la batalla.</p>
-        
-        <div class="grupo-form">
-          <label for="pin-acceso">PIN de la Partida:</label>
-          <input type="text" id="pin-acceso" placeholder="Ej. 1234" required>
-        </div>
-
-        <div class="grupo-form">
-          <label for="nickname">Tu Nickname o Alias:</label>
-          <input type="text" id="nickname" placeholder="Ingresa tu apodo rápido" required maxlength="15">
-        </div>
-
-        <div class="grupo-form">
-          <label for="carrera">Selecciona tu Equipo / Carrera:</label>
-          <select id="carrera" required>
-            <option value="" disabled selected>Cargando carreras...</option>
-          </select>
-        </div>
-
-        <button type="submit" id="btn-unirse" style="margin-top: 10px; height: 50px;">UNIRSE A LA BATALLA</button>
-        <p id="mensaje-error-registro" style="color: red; font-weight: bold; margin-top: 10px; display: none;"></p>
-      </form>
-    </section>
-
-    <!-- PANTALLA 2: LOBBY DE ESPERA -->
-    <section id="pantalla-espera" class="seccion-pantalla" style="text-align: center;">
-      <div style="padding: 40px 20px; background: #fff; border: 1px solid #ddd; border-radius: 8px;">
-        <h3 id="mensaje-bienvenida" style="color: #2980b9;">¡Bienvenido!</h3>
-        <p style="margin-top: 15px; font-size: 1.2rem;">Atento a la pantalla principal...</p>
-        <div style="margin-top: 20px;" class="loader-placeholder">⏳ Esperando que el expositor lance una pregunta...</div>
-      </div>
-    </section>
-
-    <!-- PANTALLA 3: PREGUNTA ACTIVA -->
-    <section id="pantalla-pregunta" class="seccion-pantalla">
-      <div style="background: #fff; border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
-        <div class="espacio-entre" style="margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 10px;">
-          <strong style="color: #c0392b; font-size: 1.2rem;">Tiempo: <span id="tiempo-restante">0</span>s</strong>
-          <span style="font-weight: bold; color: #7f8c8d;">Responde Rápido</span>
-        </div>
-        
-        <h3 id="texto-pregunta" style="margin-bottom: 20px; font-size: 1.3rem;">Cargando pregunta...</h3>
-        
-        <div class="opciones-respuestas">
-          <button class="btn-respuesta a" data-opcion="A">A<br><span style="font-size:0.8rem; font-weight:normal;" class="texto-opcion-A"></span></button>
-          <button class="btn-respuesta b" data-opcion="B">B<br><span style="font-size:0.8rem; font-weight:normal;" class="texto-opcion-B"></span></button>
-          <button class="btn-respuesta c" data-opcion="C">C<br><span style="font-size:0.8rem; font-weight:normal;" class="texto-opcion-C"></span></button>
-          <button class="btn-respuesta d" data-opcion="D">D<br><span style="font-size:0.8rem; font-weight:normal;" class="texto-opcion-D"></span></button>
-        </div>
-        
-        <div id="feedback-respuesta" style="margin-top: 20px; text-align: center; font-size: 1.2rem; font-weight: bold; display: none; padding: 15px; border-radius: 6px;"></div>
-      </div>
-    </section>
-
-    <!-- PANTALLA 4: JUEGO FINALIZADO -->
-    <section id="pantalla-finalizado" class="seccion-pantalla" style="text-align: center;">
-      <div style="padding: 40px 20px; background: #fff; border: 3px solid #27ae60; border-radius: 8px;">
-        <h2 style="color: #27ae60;">¡Juego Terminado!</h2>
-        <p style="margin-top: 15px; font-size: 1.2rem;">Mira la pantalla principal para ver qué equipo conquistó más territorios.</p>
-      </div>
-    </section>
-
-  </div>
-
-  <script src="js/jugar.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Conquista Relámpago - Participante</title>
+  </head>
+  <body class="bg-[#050814] text-white">
+    <div id="root"></div>
+    <script type="module" src="/src/main-jugar.tsx"></script>
+  </body>
 </html>

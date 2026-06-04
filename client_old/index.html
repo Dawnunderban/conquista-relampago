@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conquista Relámpago - Pantalla del Auditorio</title>
+  <link rel="stylesheet" href="css/estilos.css">
+  <!-- CDN de Socket.io para permitir conexiones desde cualquier host (e.g., Vercel) -->
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <!-- CDN de qrcode.js para la generación del código QR dinámico -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+  <div class="contenedor flex-columna">
+    
+    <header class="espacio-entre">
+      <div>
+        <h1>⚡ Conquista Relámpago</h1>
+        <p>¡Blitz Territorial Académico en Tiempo Real!</p>
+      </div>
+      <div style="text-align: right;">
+        <h3>Código PIN de Acceso:</h3>
+        <h2 id="pin-juego" style="font-size: 2.5rem; letter-spacing: 2px; color: #d35400;">----</h2>
+      </div>
+    </header>
+
+    <main class="flex-fila" style="align-items: stretch;">
+      <!-- Panel Izquierdo: Info de Partida, QR y Tiempos -->
+      <section class="flex-columna" style="flex: 1; min-width: 300px; border: 1px solid #ddd; padding: 20px; background-color: #fff; border-radius: 8px;">
+        <h2>Estado de la Partida</h2>
+        <hr>
+        
+        <div class="espacio-entre" style="margin-top: 10px;">
+          <strong>Usuarios Conectados:</strong>
+          <span id="contador-usuarios" style="font-size: 1.5rem; font-weight: bold;">0</span>
+        </div>
+
+        <div style="text-align: center; margin: 20px 0;">
+          <h4>¡Escanea con tu celular para Jugar!</h4>
+          <div id="contenedor-qr"></div>
+          <p id="url-juego" style="font-size: 0.8rem; word-break: break-all; color: #555;"></p>
+        </div>
+
+        <div class="flex-columna" style="gap: 10px; background: #fdfefe; padding: 15px; border: 1px solid #e5e7eb; border-radius: 6px;">
+          <div>
+            <strong>Tiempo de Juego Restante:</strong>
+            <div id="tiempo-global" style="font-size: 2rem; font-weight: bold; color: #2c3e50;">20:00</div>
+          </div>
+          <div>
+            <strong>Tiempo de la Pregunta:</strong>
+            <div id="tiempo-ronda" style="font-size: 2rem; font-weight: bold; color: #c0392b;">0s</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Panel Derecho: Mapa de Conquista y Marcadores en Vivo -->
+      <section style="flex: 2; min-width: 300px; display: flex; flex-direction: column; gap: 20px;">
+        
+        <!-- Mapa de Sectores -->
+        <div style="border: 1px solid #ddd; padding: 20px; background-color: #fff; border-radius: 8px;">
+          <h2>🗺️ Mapa de Conquista Territorial</h2>
+          <hr>
+          
+          <div id="mapa" class="mapa-conquista">
+            <!-- Sector 0 -->
+            <div id="territorio-0" class="sector-bloque" data-sector-id="territorio-0">
+              <h3>Sector Norte</h3>
+              <p>Dueño: <span class="dueño-nombre">Libre</span></p>
+              <div class="indicador-dominio" style="margin-top: 10px; font-weight: bold; font-size: 0.9rem;"></div>
+            </div>
+            <!-- Sector 1 -->
+            <div id="territorio-1" class="sector-bloque" data-sector-id="territorio-1">
+              <h3>Sector Centro</h3>
+              <p>Dueño: <span class="dueño-nombre">Libre</span></p>
+              <div class="indicador-dominio" style="margin-top: 10px; font-weight: bold; font-size: 0.9rem;"></div>
+            </div>
+            <!-- Sector 2 -->
+            <div id="territorio-2" class="sector-bloque" data-sector-id="territorio-2">
+              <h3>Sector Sur</h3>
+              <p>Dueño: <span class="dueño-nombre">Libre</span></p>
+              <div class="indicador-dominio" style="margin-top: 10px; font-weight: bold; font-size: 0.9rem;"></div>
+            </div>
+            <!-- Sector 3 -->
+            <div id="territorio-3" class="sector-bloque" data-sector-id="territorio-3">
+              <h3>Sector Este</h3>
+              <p>Dueño: <span class="dueño-nombre">Libre</span></p>
+              <div class="indicador-dominio" style="margin-top: 10px; font-weight: bold; font-size: 0.9rem;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Marcadores en Vivo de la Ronda Activa -->
+        <div style="border: 1px solid #ddd; padding: 20px; background-color: #fff; border-radius: 8px;">
+          <h2>📊 Aciertos de la Ronda (En vivo por Carrera)</h2>
+          <hr>
+          <div style="margin-top: 15px;">
+            <p id="sector-atacado-info" style="font-weight: bold; color: #7f8c8d; font-size: 1.1rem; margin-bottom: 10px;">
+              Ningún sector bajo ataque actualmente.
+            </p>
+            <ul id="lista-votos" class="lista-carreras-votos">
+              <!-- Rellenado dinámicamente con las carreras configuradas -->
+              <li style="color: #777;">Esperando configuración de carreras...</li>
+            </ul>
+          </div>
+        </div>
+
+      </section>
+    </main>
+
+    <!-- Modal o Panel de Fin de Juego (Escondido por defecto) -->
+    <section id="pantalla-final" class="seccion-pantalla" style="border: 3px solid #27ae60; padding: 30px; margin-top: 20px; background-color: #fff; border-radius: 8px; text-align: center;">
+      <h1 style="color: #27ae60; font-size: 3rem; margin-bottom: 10px;">🏆 ¡CONQUISTA COMPLETADA!</h1>
+      <p style="font-size: 1.2rem; margin-bottom: 20px;">El juego ha finalizado. A continuación se muestra el podio definitivo:</p>
+      
+      <div id="lista-podio" class="flex-columna" style="max-width: 600px; margin: 0 auto;">
+        <!-- Rellenado dinámicamente -->
+      </div>
+    </section>
+
+  </div>
+
+  <script src="js/auditorio.js"></script>
+</body>
+</html>
