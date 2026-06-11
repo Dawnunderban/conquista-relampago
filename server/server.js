@@ -48,6 +48,51 @@ let gameState = {
   sectorEnCurso: null
 };
 
+// ══════════════════════════════════════════════════════════════════════
+//  PREGUNTAS DE PRUEBA — solo para desarrollo/demo.
+//  Para activarlas durante una prueba rápida, descomenta la línea
+//  "gameState.preguntas = PREGUNTAS_PRUEBA;" que está justo debajo.
+// ══════════════════════════════════════════════════════════════════════
+const PREGUNTAS_PRUEBA = [
+  {
+    texto: '¿Cuántos continentes hay en el planeta Tierra?',
+    opciones: { A: '5', B: '6', C: '7', D: '8' },
+    correcta: 'C',
+    tiempo: 20,
+    sector: 'CIENCIAS'
+  },
+  {
+    texto: '¿En qué año llegó el hombre a la Luna por primera vez?',
+    opciones: { A: '1965', B: '1969', C: '1972', D: '1975' },
+    correcta: 'B',
+    tiempo: 20,
+    sector: 'INGENIERÍA'
+  },
+  {
+    texto: '¿Cuál es el elemento más abundante en la corteza terrestre?',
+    opciones: { A: 'Hierro', B: 'Silicio', C: 'Oxígeno', D: 'Aluminio' },
+    correcta: 'C',
+    tiempo: 20,
+    sector: 'CIENCIAS'
+  },
+  {
+    texto: '¿Quién pintó la Mona Lisa?',
+    opciones: { A: 'Miguel Ángel', B: 'Rafael', C: 'Leonardo da Vinci', D: 'Botticelli' },
+    correcta: 'C',
+    tiempo: 20,
+    sector: 'ARTE'
+  },
+  {
+    texto: '¿Cuántos huesos tiene el cuerpo humano adulto?',
+    opciones: { A: '186', B: '196', C: '206', D: '216' },
+    correcta: 'C',
+    tiempo: 20,
+    sector: 'MEDICINA'
+  }
+];
+// ── Para activar las preguntas de prueba, descomenta la siguiente línea: ──
+// gameState.preguntas = PREGUNTAS_PRUEBA;
+
 // Generar un PIN aleatorio de 4 dígitos
 function generarPIN() {
   return Math.floor(1000 + Math.random() * 9000).toString();

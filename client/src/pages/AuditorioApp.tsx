@@ -572,91 +572,125 @@ export default function AuditorioApp() {
       </header>
 
       {/* ══════════════════════════════════════════════════════
-           BANNER QR ÚNICO — entrada para TODOS los jugadores
+           BANNER QR ÚNICO — tema claro, con logo UNIPAZ
           ══════════════════════════════════════════════════════ */}
       {estadoJuego !== 'finalizado' && (
         <div
           style={{
-            ...CARD_STYLE,
             width: '100%',
             maxWidth: '1280px',
             marginBottom: '16px',
             position: 'relative',
             zIndex: 10,
-            background: 'linear-gradient(135deg, rgba(6,182,212,0.08) 0%, rgba(168,85,247,0.06) 50%, rgba(249,115,22,0.05) 100%)',
-            border: '1px solid rgba(6,182,212,0.25)',
-            boxShadow: '0 0 40px rgba(6,182,212,0.08), 0 10px 40px rgba(0,0,0,0.5)',
+            background: 'rgba(255, 255, 255, 0.97)',
+            border: '1.5px solid rgba(255,255,255,0.9)',
+            borderRadius: '24px',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.1)',
+            backdropFilter: 'blur(20px)',
           }}
           className="flex flex-col md:flex-row items-center justify-between gap-6 px-8 py-5 animate-slideDown"
         >
-          {/* Texto de invitación */}
-          <div className="flex flex-col gap-1 text-center md:text-left">
-            <div style={{
-              fontSize: '22px', fontWeight: 900, letterSpacing: '0.12em',
-              background: 'linear-gradient(90deg, #06b6d4, #a855f7)',
-              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-            }}>
-              ⚡ ¡ÚNETE A LA BATALLA!
-            </div>
-            <div className="text-slate-300 text-sm font-semibold mt-1">
-              Escanea el código QR con tu celular y selecciona tu carrera
-            </div>
-            <div className="text-slate-500 text-xs font-bold uppercase tracking-widest mt-0.5">
-              Una sola sala · Todas las carreras compiten juntas
+          {/* Logo UNIPAZ + Título */}
+          <div className="flex items-center gap-4">
+            <img
+              src="/assets/unipaz.jpg"
+              alt="Logo UNIPAZ"
+              style={{
+                width: '72px',
+                height: '72px',
+                borderRadius: '16px',
+                objectFit: 'cover',
+                border: '2px solid rgba(34,197,94,0.4)',
+                boxShadow: '0 0 20px rgba(34,197,94,0.2)',
+                flexShrink: 0,
+              }}
+            />
+            <div className="flex flex-col gap-0.5 text-center md:text-left">
+              <div style={{
+                fontSize: '11px', fontWeight: 800, letterSpacing: '0.25em',
+                color: '#16a34a', textTransform: 'uppercase',
+              }}>
+                Universidad de Paz — UNIPAZ
+              </div>
+              <div style={{
+                fontSize: '20px', fontWeight: 900, letterSpacing: '0.08em',
+                background: 'linear-gradient(90deg, #0e7490, #7c3aed)',
+                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                lineHeight: 1.2,
+              }}>
+                ⚡ ¡ÚNETE A LA BATALLA!
+              </div>
+              <div style={{ fontSize: '12px', fontWeight: 600, color: '#475569', marginTop: '2px' }}>
+                Escanea con tu celular y selecciona tu carrera
+              </div>
+              <div style={{ fontSize: '10px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.15em' }}>
+                Una sola sala · Todas las carreras compiten juntas
+              </div>
             </div>
           </div>
 
-          {/* Separador */}
+          {/* Separador vertical */}
           <div style={{
-            width: '1px', height: '80px',
-            background: 'linear-gradient(to bottom, transparent, rgba(6,182,212,0.4), transparent)',
-            display: 'none',
+            width: '1px', height: '90px', flexShrink: 0,
+            background: 'linear-gradient(to bottom, transparent, #cbd5e1, transparent)',
           }} className="hidden md:block" />
 
-          {/* PIN texto grande */}
+          {/* PIN grande */}
           <div className="flex flex-col items-center gap-1 text-center">
-            <span className="text-[9px] text-slate-500 font-black tracking-[0.25em] uppercase">PIN de Acceso</span>
+            <span style={{ fontSize: '10px', fontWeight: 800, color: '#64748b', letterSpacing: '0.2em', textTransform: 'uppercase' }}>
+              PIN de Acceso
+            </span>
             <span style={{
-              fontFamily: 'monospace', fontSize: '44px', fontWeight: 900, letterSpacing: '0.15em',
-              color: '#10b981',
-              textShadow: '0 0 20px rgba(16,185,129,0.5)',
-              lineHeight: 1,
-            }}>{pin}</span>
-            <span className="text-[8px] text-slate-600 font-bold uppercase tracking-wider">o ingresa en</span>
-            <span className="text-[10px] text-cyan-400 font-bold">{playUrl.replace(/^https?:\/\//, '')}</span>
+              fontFamily: 'monospace', fontSize: '52px', fontWeight: 900,
+              color: '#16a34a', lineHeight: 1,
+              textShadow: '0 2px 10px rgba(22,163,74,0.2)',
+              letterSpacing: '0.1em',
+            }}>
+              {pin}
+            </span>
+            <span style={{ fontSize: '9px', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+              o ingresa en
+            </span>
+            <span style={{ fontSize: '10px', color: '#0284c7', fontWeight: 700 }}>
+              {playUrl.replace(/^https?:\/\//, '')}
+            </span>
           </div>
 
-          {/* QR único y grande */}
+          {/* Separador vertical */}
+          <div style={{
+            width: '1px', height: '90px', flexShrink: 0,
+            background: 'linear-gradient(to bottom, transparent, #cbd5e1, transparent)',
+          }} className="hidden md:block" />
+
+          {/* QR único — colores claros para escanear fácil */}
           <div className="flex flex-col items-center gap-2">
+            <span style={{ fontSize: '9px', color: '#64748b', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em' }}>
+              Apunta la cámara aquí
+            </span>
             {qrCodeUrl ? (
-              <div
-                style={{
-                  padding: '10px',
-                  background: '#050a18',
-                  border: '2px solid rgba(6,182,212,0.5)',
-                  borderRadius: '20px',
-                  boxShadow: '0 0 30px rgba(6,182,212,0.2), inset 0 0 20px rgba(6,182,212,0.03)',
-                }}
-              >
+              <div style={{
+                padding: '10px',
+                background: '#ffffff',
+                border: '2px solid #e2e8f0',
+                borderRadius: '18px',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
+              }}>
                 <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(playUrl)}&color=06b6d4&bgcolor=050a18`}
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(playUrl)}&color=0f172a&bgcolor=ffffff`}
                   alt="QR para ingresar al juego"
-                  style={{ width: '160px', height: '160px', borderRadius: '12px', display: 'block' }}
+                  style={{ width: '160px', height: '160px', borderRadius: '10px', display: 'block' }}
                 />
               </div>
             ) : (
               <div style={{
                 width: 160, height: 160,
-                border: '2px dashed rgba(6,182,212,0.3)',
-                borderRadius: '20px',
+                border: '2px dashed #cbd5e1', borderRadius: '18px',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: '#475569', fontSize: '11px', fontWeight: 700,
-                animation: 'blink 1.5s ease-in-out infinite'
+                color: '#94a3b8', fontSize: '11px', fontWeight: 700,
               }}>
                 Esperando PIN...
               </div>
             )}
-            <span className="text-[8px] text-slate-600 font-bold uppercase tracking-widest">Apunta la cámara aquí</span>
           </div>
         </div>
       )}

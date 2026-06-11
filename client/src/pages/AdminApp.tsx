@@ -28,7 +28,9 @@ export default function AdminApp() {
   const [usuariosConectados, setUsuariosConectados] = useState(0);
   const [estadoJuego, setEstadoJuego] = useState('ESPERA');
   const [carrerasConfiguradas, setCarrerasConfiguradas] = useState<string[]>([]);
-  const [carrerasLocales, setCarrerasLocales] = useState<string[]>([]);
+  // Las 5 carreras estándar vienen precargadas para facilitar la configuración
+  const CARRERAS_DEFAULT = ['Medicina', 'Ingeniería', 'Ciencias', 'Arte', 'Derecho'];
+  const [carrerasLocales, setCarrerasLocales] = useState<string[]>(CARRERAS_DEFAULT);
   
   // Preguntas bank
   const [preguntasLocales, setPreguntasLocales] = useState<Pregunta[]>([]);
@@ -81,13 +83,13 @@ export default function AdminApp() {
       setPin(nuevoPin);
       setEstadoJuego('ESPERA');
       setCarrerasConfiguradas([]);
-      setCarrerasLocales([]);
+      setCarrerasLocales(['Medicina', 'Ingeniería', 'Ciencias', 'Arte', 'Derecho']);
       setPreguntasLocales([]);
       setRondaEnCurso(false);
       setPreguntaActiva('Ninguna');
       setSectorActivo('Ninguno');
       setTiempoRonda(0);
-      alert(`Nueva partida creada. PIN: ${nuevoPin}. Favor de configurar carreras y preguntas.`);
+      alert(`Nueva partida creada. PIN: ${nuevoPin}. Las carreras han sido restablecidas.`);
     });
 
     socket.on('carreras_actualizadas', (carreras) => {
