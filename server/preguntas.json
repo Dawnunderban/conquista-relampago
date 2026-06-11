@@ -1,62 +1,62 @@
 [
   {
-    "texto": "¿Cuántos continentes hay en el planeta Tierra?",
+    "texto": "¿Qué canal iónico es bloqueado principalmente por anestésicos locales como la lidocaína para impedir la conducción del impulso nervioso?",
     "opciones": {
-      "A": "5",
-      "B": "6",
-      "C": "7",
-      "D": "8"
-    },
-    "correcta": "C",
-    "tiempo": 20,
-    "sector": "CIENCIAS"
-  },
-  {
-    "texto": "¿En qué año llegó el hombre a la Luna por primera vez?",
-    "opciones": {
-      "A": "1965",
-      "B": "1969",
-      "C": "1972",
-      "D": "1975"
+      "A": "Canales de potasio dependientes de voltaje",
+      "B": "Canales de sodio dependientes de voltaje",
+      "C": "Canales de calcio tipo L",
+      "D": "Receptores nicotínicos de acetilcolina"
     },
     "correcta": "B",
-    "tiempo": 20,
-    "sector": "INGENIERÍA"
+    "tiempo": 30,
+    "sector": "MEDICINA"
   },
   {
-    "texto": "¿Cuál es el elemento más abundante en la corteza terrestre?",
+    "texto": "En el ámbito constitucional, ¿qué garantiza específicamente el recurso de \"Habeas Corpus\"?",
     "opciones": {
-      "A": "Hierro",
-      "B": "Silicio",
-      "C": "Oxígeno",
-      "D": "Aluminio"
+      "A": "El derecho a la propiedad privada frente a expropiaciones",
+      "B": "La protección de la libertad personal frente a detenciones arbitrarias",
+      "C": "La anulación de contratos comerciales fraudulentos",
+      "D": "El derecho a solicitar información pública al Estado"
     },
-    "correcta": "C",
-    "tiempo": 20,
-    "sector": "CIENCIAS"
+    "correcta": "B",
+    "tiempo": 30,
+    "sector": "DERECHO"
   },
   {
-    "texto": "¿Quién pintó la Mona Lisa?",
+    "texto": "¿Cuál de las siguientes características define principalmente a la pintura impresionista?",
     "opciones": {
-      "A": "Miguel Ángel",
-      "B": "Rafael",
-      "C": "Leonardo da Vinci",
-      "D": "Botticelli"
+      "A": "Búsqueda del realismo anatómico detallado",
+      "B": "Uso de una paleta de colores oscuros y sombríos",
+      "C": "Énfasis en la representación de la luz cambiante mediante pinceladas rápidas",
+      "D": "Temática exclusivamente histórica y mitológica"
     },
     "correcta": "C",
-    "tiempo": 20,
+    "tiempo": 30,
     "sector": "ARTE"
   },
   {
-    "texto": "¿Cuántos huesos tiene el cuerpo humano adulto?",
+    "texto": "En el análisis estructural, ¿cuál es la característica fundamental de una cercha (o armadura) ideal?",
     "opciones": {
-      "A": "186",
-      "B": "196",
-      "C": "206",
-      "D": "216"
+      "A": "Está compuesta por elementos rectos unidos en sus extremos y sometidos principalmente a esfuerzos axiales",
+      "B": "Está diseñada para resistir grandes momentos flectores en toda su longitud",
+      "C": "Es un elemento de sección variable con alta resistencia a la torsión",
+      "D": "Es una estructura monolítica que no permite la rotación en sus apoyos"
+    },
+    "correcta": "A",
+    "tiempo": 30,
+    "sector": "INGENIERÍA"
+  },
+  {
+    "texto": "Durante la fase luminosa de la fotosíntesis, ¿cuáles son los productos energéticos finales que alimentarán el Ciclo de Calvin?",
+    "opciones": {
+      "A": "Glucosa y Oxígeno",
+      "B": "CO2 y Agua",
+      "C": "ATP y NADPH",
+      "D": "ADP y NADP+"
     },
     "correcta": "C",
-    "tiempo": 20,
-    "sector": "MEDICINA"
+    "tiempo": 30,
+    "sector": "CIENCIAS"
   }
 ]
