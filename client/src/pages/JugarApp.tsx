@@ -353,14 +353,14 @@ export default function JugarApp() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex items-center justify-center p-2 sm:p-4 relative">
+    <div className="min-h-screen bg-white flex items-center justify-center p-2 sm:p-4 relative">
       <StarField />
 
       {/* Mockup Mobile Shell */}
-      <div className="relative w-full max-w-[340px] h-[680px] bg-slate-50 rounded-[48px] border-[4px] border-slate-300 shadow-xl overflow-hidden flex flex-col z-10">
+      <div className="relative w-full max-w-[340px] h-[680px] bg-white rounded-[48px] border-[4px] border-slate-300 shadow-xl overflow-hidden flex flex-col z-10">
         
         {/* Notch */}
-        <div className="flex justify-center pt-2.5 pb-1.5 flex-shrink-0 bg-slate-100 relative z-20">
+        <div className="flex justify-center pt-2.5 pb-1.5 flex-shrink-0 bg-white relative z-20">
           <div className="w-24 h-5.5 bg-slate-900 rounded-full flex items-center justify-center gap-1.5 p-0.5">
             <div className="w-1.5 h-1.5 rounded-full bg-slate-700" />
             <div className="w-6 h-1 bg-slate-800 rounded-full" />
@@ -548,7 +548,7 @@ export default function JugarApp() {
                 key="tabs"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="flex-1 flex flex-col overflow-hidden bg-slate-50"
+                className="flex-1 flex flex-col overflow-hidden bg-white"
               >
                 {/* Header */}
                 <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-white/90 backdrop-blur-sm relative z-10 flex-shrink-0">

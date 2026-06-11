@@ -3,41 +3,64 @@ import { io, Socket } from 'socket.io-client';
 import { StarField } from '../components/StarField';
 import { Zap, Users, Trophy, QrCode } from 'lucide-react';
 
-const CX = 245, CY = 245;
-const R_OUT = 170;
-const R_IN  = 52;
-const R_LBL = 118;
-const GAP   = 2.8;
-
-const toRad = (deg: number) => (deg * Math.PI) / 180;
-const pt = (deg: number, r: number) => ({
-  x: CX + r * Math.cos(toRad(deg)),
-  y: CY + r * Math.sin(toRad(deg)),
-});
-const fmt = (n: number) => n.toFixed(2);
-
-const makePath = (startDeg: number, endDeg: number) => {
-  const s = startDeg + GAP / 2;
-  const e = endDeg   - GAP / 2;
-  const o1 = pt(s, R_OUT), o2 = pt(e, R_OUT);
-  const i1 = pt(s, R_IN),  i2 = pt(e, R_IN);
-  const lg = endDeg - startDeg > 180 ? 1 : 0;
-  return (
-    `M${fmt(o1.x)},${fmt(o1.y)} ` +
-    `A${R_OUT},${R_OUT},0,${lg},1,${fmt(o2.x)},${fmt(o2.y)} ` +
-    `L${fmt(i2.x)},${fmt(i2.y)} ` +
-    `A${R_IN},${R_IN},0,${lg},0,${fmt(i1.x)},${fmt(i1.y)} Z`
-  );
-};
-
-const midPt = (startDeg: number, endDeg: number, r: number) => pt((startDeg + endDeg) / 2, r);
-
+// Territory map — 5 polygon regions in board-game style.
+// Borders meet at center (245,245). Each sector has baseColor and darkColor for gradients.
 const SECTORES = [
-  { key: 'MEDICINA',   label: 'Medicina',   emoji: '🩺', color: '#10b981', dark: '#064e3b', startDeg: -126, endDeg: -54  },
-  { key: 'DERECHO',    label: 'Derecho',    emoji: '⚖️', color: '#d946ef', dark: '#701a75', startDeg: -54,  endDeg: 18   },
-  { key: 'ARTE',       label: 'Arte',       emoji: '🎨', color: '#f97316', dark: '#7c2d12', startDeg: 18,   endDeg: 90   },
-  { key: 'CIENCIAS',   label: 'Ciencias',   emoji: '🔬', color: '#eab308', dark: '#713f12', startDeg: 90,   endDeg: 162  },
-  { key: 'INGENIERÍA', label: 'Ingeniería', emoji: '⚙️', color: '#06b6d4', dark: '#164e63', startDeg: 162,  endDeg: 234  },
+  {
+    key: 'MEDICINA',
+    label: 'Medicina',
+    emoji: '🩺',
+    color: '#10b981',
+    dark: '#065f46',
+    freeColor: '#6ee7b7',
+    points: '0,0 490,0 490,125 310,195 245,245 180,195 0,125',
+    labelX: 245,
+    labelY: 65,
+  },
+  {
+    key: 'DERECHO',
+    label: 'Derecho',
+    emoji: '⚖️',
+    color: '#a855f7',
+    dark: '#6b21a8',
+    freeColor: '#d8b4fe',
+    points: '0,125 180,195 245,245 175,320 0,360',
+    labelX: 72,
+    labelY: 245,
+  },
+  {
+    key: 'ARTE',
+    label: 'Arte',
+    emoji: '🎨',
+    color: '#f97316',
+    dark: '#9a3412',
+    freeColor: '#fdba74',
+    points: '0,360 175,320 245,245 195,358 100,490 0,490',
+    labelX: 82,
+    labelY: 422,
+  },
+  {
+    key: 'CIENCIAS',
+    label: 'Ciencias',
+    emoji: '🔬',
+    color: '#eab308',
+    dark: '#854d0e',
+    freeColor: '#fde047',
+    points: '100,490 195,358 245,245 315,320 390,490',
+    labelX: 248,
+    labelY: 438,
+  },
+  {
+    key: 'INGENIERÍA',
+    label: 'Ingeniería',
+    emoji: '⚙️',
+    color: '#06b6d4',
+    dark: '#164e63',
+    freeColor: '#67e8f9',
+    points: '390,490 315,320 245,245 310,195 490,125 490,490',
+    labelX: 420,
+    labelY: 308,
+  },
 ];
 
 const PALETTE = ['#2563eb', '#16a34a', '#0284c7', '#059669', '#3b82f6', '#10b981', '#0d9488'];
@@ -223,7 +246,7 @@ export default function AuditorioApp() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-xl lg:text-2xl font-black tracking-widest bg-gradient-to-r from-green-600 via-slate-900 to-blue-600 bg-clip-text text-transparent uppercase">
-                Conquista Relámpago
+                Responde y Avanza
               </h1>
             </div>
             <p className="text-[10px] sm:text-xs text-slate-500 font-bold uppercase tracking-wider mt-0.5">
@@ -345,102 +368,156 @@ export default function AuditorioApp() {
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 flex-1 items-stretch">
             
-            {/* Map Container */}
-            <div className="md:col-span-7 bg-slate-50 border border-slate-200 rounded-3xl p-6 flex flex-col items-center justify-center relative shadow-sm min-h-[420px]">
-              <span className="absolute top-4 text-xs font-black text-slate-500 tracking-widest uppercase">
-                Mapa Territorial
-              </span>
-              
-              {/* Rectangular Map Container with rounded corners */}
-              <div className="relative w-full max-w-[420px] aspect-square bg-slate-100 border border-slate-200 rounded-2xl overflow-hidden flex items-center justify-center shadow-md">
-                {/* Background Image of Map (No rounded-full crop) */}
-                <img
-                  src="/assets/mapa-conquista.png"
-                  alt="Mapa Conquista"
-                  className="absolute inset-0 w-full h-full object-cover opacity-80"
-                />
+            {/* Map Container — Board-game style territory map */}
+            <div className="md:col-span-7 bg-slate-900 border border-slate-700 rounded-3xl p-4 flex flex-col items-center justify-center relative shadow-xl min-h-[420px] overflow-hidden">
+              {/* Background grid texture */}
+              <div className="absolute inset-0 opacity-10" style={{
+                backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)',
+                backgroundSize: '20px 20px'
+              }} />
 
-                {/* SVG Sectors Overlay */}
+              <span className="absolute top-3 text-[10px] font-black text-slate-400 tracking-[0.3em] uppercase z-10">
+                ⚔ Mapa Territorial ⚔
+              </span>
+
+              <div className="relative w-full max-w-[380px] aspect-square mt-5">
                 <svg
                   viewBox="0 0 490 490"
                   xmlns="http://www.w3.org/2000/svg"
-                  className="absolute inset-0 w-full h-full z-10 select-none pointer-events-none"
+                  className="w-full h-full select-none"
                 >
                   <defs>
+                    {/* Per-sector radial gradients */}
+                    {SECTORES.map((s) => {
+                      const sectorObj = mapa[s.key] || { nombre: s.label, dueño: 'Libre' };
+                      const dueño = sectorObj.dueño;
+                      const hasOwner = dueño !== 'Libre';
+                      const fillColor = hasOwner ? obtenerColorCarrera(dueño, carreras) : s.freeColor;
+                      return (
+                        <radialGradient key={s.key} id={`grad-${s.key}`} cx="245" cy="245" r="300" gradientUnits="userSpaceOnUse">
+                          <stop offset="0%" stopColor={fillColor} stopOpacity="0.55" />
+                          <stop offset="100%" stopColor={fillColor} stopOpacity="0.18" />
+                        </radialGradient>
+                      );
+                    })}
+                    {/* Glow filters */}
                     {SECTORES.map((s) => (
-                      <filter key={s.key} id={`glow-${s.key}`} x="-50%" y="-50%" width="200%" height="200%">
-                        <feGaussianBlur stdDeviation="8" result="blur" />
+                      <filter key={s.key} id={`glow-${s.key}`} x="-30%" y="-30%" width="160%" height="160%">
+                        <feGaussianBlur stdDeviation="7" result="blur" />
                         <feMerge>
                           <feMergeNode in="blur" />
                           <feMergeNode in="SourceGraphic" />
                         </feMerge>
                       </filter>
                     ))}
+                    <filter id="attack-glow" x="-40%" y="-40%" width="180%" height="180%">
+                      <feGaussianBlur stdDeviation="10" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                    <filter id="label-shadow">
+                      <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#000" floodOpacity="0.5" />
+                    </filter>
                   </defs>
 
+                  {/* Dark canvas */}
+                  <rect x="0" y="0" width="490" height="490" fill="#0f172a" rx="12" />
+
+                  {/* Territory Polygons */}
                   {SECTORES.map((s) => {
                     const sectorObj = mapa[s.key] || { nombre: s.label, dueño: 'Libre' };
                     const dueño = sectorObj.dueño;
                     const hasOwner = dueño !== 'Libre';
                     const ownerColor = hasOwner ? obtenerColorCarrera(dueño, carreras) : s.color;
-                    const path = makePath(s.startDeg, s.endDeg);
-                    const labelPt = midPt(s.startDeg, s.endDeg, R_LBL);
                     const isAttacked = sectorEnCurso === s.key;
 
                     return (
                       <g key={s.key}>
-                        {/* Relleno del sector */}
-                        <path 
-                          d={path} 
-                          fill={ownerColor}
-                          className="transition-all duration-300"
-                          opacity={hasOwner ? 0.35 : 0.05}
+                        {/* Solid gradient fill */}
+                        <polygon
+                          points={s.points}
+                          fill={`url(#grad-${s.key})`}
+                          className="transition-all duration-500"
                         />
-                        {/* Borde neón */}
-                        <path 
-                          d={path} 
-                          fill="none" 
-                          stroke={ownerColor}
-                          strokeWidth={isAttacked ? 6 : hasOwner ? 4 : 2}
-                          opacity={isAttacked ? 1 : hasOwner ? 0.8 : 0.2}
-                          filter={hasOwner || isAttacked ? `url(#glow-${s.key})` : 'none'}
+                        {/* Thick white border — board-game style */}
+                        <polygon
+                          points={s.points}
+                          fill="none"
+                          stroke="white"
+                          strokeWidth="2"
+                          strokeLinejoin="round"
+                          opacity="0.15"
+                        />
+                        {/* Colored glowing border */}
+                        <polygon
+                          points={s.points}
+                          fill="none"
+                          stroke={isAttacked ? '#fbbf24' : ownerColor}
+                          strokeWidth={isAttacked ? 4 : hasOwner ? 3 : 1.5}
+                          strokeLinejoin="round"
+                          opacity={isAttacked ? 1 : hasOwner ? 0.95 : 0.4}
+                          filter={`url(#glow-${s.key})`}
                           className={`transition-all duration-300 ${isAttacked ? 'animate-pulse' : ''}`}
                         />
-                        {/* Label Overlay */}
-                        <g>
-                          <rect 
-                            x={labelPt.x - 48} 
-                            y={labelPt.y - 12} 
-                            width={96} 
-                            height={24} 
-                            rx="12"
-                            fill="#fffffeee" 
-                            stroke={ownerColor} 
-                            strokeWidth="1.5" 
-                            opacity={hasOwner || isAttacked ? 1 : 0.6}
-                          />
-                          <text 
-                            x={fmt(labelPt.x)} 
-                            y={fmt(labelPt.y + 4)} 
-                            textAnchor="middle" 
-                            fontSize="9"
-                            fontWeight="800" 
-                            fill={isAttacked ? '#eab308' : '#0f172a'}
-                            className="font-mono tracking-wide uppercase select-none"
-                          >
-                            {isAttacked ? '⚠️ ATAQUE' : hasOwner ? dueño.substring(0, 12) : s.label}
-                          </text>
-                        </g>
+
+                        {/* Label pill badge */}
+                        <rect
+                          x={s.labelX - 46}
+                          y={s.labelY - 14}
+                          width={92}
+                          height={26}
+                          rx={13}
+                          fill={isAttacked ? '#fbbf24' : ownerColor}
+                          opacity={1}
+                          filter="url(#label-shadow)"
+                          className="transition-all duration-300"
+                        />
+                        {/* Label text */}
+                        <text
+                          x={s.labelX}
+                          y={s.labelY + 4}
+                          textAnchor="middle"
+                          fontSize="9.5"
+                          fontWeight="900"
+                          fill={isAttacked ? '#1c1917' : '#ffffff'}
+                          letterSpacing="0.08em"
+                          className="select-none"
+                          filter="url(#label-shadow)"
+                        >
+                          {isAttacked ? '⚡ ATAQUE' : hasOwner ? dueño.substring(0, 12).toUpperCase() : s.label.toUpperCase()}
+                        </text>
+                        {/* Small emoji above badge */}
+                        <text
+                          x={s.labelX}
+                          y={s.labelY - 18}
+                          textAnchor="middle"
+                          fontSize="16"
+                          className="select-none"
+                        >
+                          {s.emoji}
+                        </text>
                       </g>
                     );
                   })}
+
+                  {/* Center shield emblem */}
+                  <circle cx="245" cy="245" r="40" fill="#1e293b" stroke="#475569" strokeWidth="3" />
+                  <circle cx="245" cy="245" r="32" fill="#0f172a" stroke="#334155" strokeWidth="1.5" />
+                  <text x="245" y="252" textAnchor="middle" fontSize="24" className="select-none">🏛️</text>
+                  <text x="245" y="272" textAnchor="middle" fontSize="6.5" fontWeight="900" fill="#64748b" letterSpacing="0.18em" className="select-none">UNIPAZ</text>
                 </svg>
               </div>
 
               {/* Map Footer Legend */}
-              <div className="absolute bottom-4 flex gap-3 text-[9px] text-slate-500 font-bold uppercase tracking-widest">
+              <div className="absolute bottom-3 flex flex-wrap justify-center gap-2 px-3">
                 {SECTORES.map(s => (
-                  <span key={s.key} style={{ color: s.color }} className="flex items-center gap-1">
+                  <span
+                    key={s.key}
+                    className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                    style={{ backgroundColor: s.color + '33', color: s.freeColor, border: `1px solid ${s.color}55` }}
+                  >
                     <span>{s.emoji}</span>
                     <span>{s.label}</span>
                   </span>
