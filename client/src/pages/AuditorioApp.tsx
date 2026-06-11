@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { Zap, Users, Trophy, QrCode, Shield, Volume2, Clock } from 'lucide-react';
+import { Zap, Users, Trophy, Shield, Volume2, Clock } from 'lucide-react';
 
 // ── Constantes del mapa circular ───────────────────────────────────────────
 const CX = 245, CY = 245;
@@ -181,6 +181,15 @@ function BackgroundOrbs() {
 const SERVER_URL = (window.location.origin === 'null' || window.location.protocol === 'file:') 
   ? 'http://localhost:3000' 
   : window.location.origin;
+
+// ── Estilo unificado para los contenedores (Cards) ──────────────────────────
+const CARD_STYLE: React.CSSProperties = {
+  background: 'rgba(15, 23, 42, 0.65)',
+  border: '1px solid rgba(255, 255, 255, 0.08)',
+  borderRadius: '24px',
+  backdropFilter: 'blur(20px)',
+  boxShadow: '0 10px 40px rgba(0, 0, 0, 0.5)',
+};
 
 export default function AuditorioApp() {
   const [pin, setPin] = useState('----');
@@ -368,8 +377,16 @@ export default function AuditorioApp() {
 
   // Preparar lista de carreras e indicar cuántos sectores domina cada una
   const activeCareers = carreras.length > 0 ? carreras : ['MEDICINA', 'DERECHO', 'ARTE', 'CIENCIAS', 'INGENIERÍA'];
+  
   const countCapturedSectors = (careerName: string) => {
     return Object.values(mapa).filter(s => s.dueño.toUpperCase() === careerName.toUpperCase()).length;
+  };
+
+  const getOwnedSectoresNames = (careerName: string) => {
+    return Object.keys(mapa)
+      .filter(secKey => mapa[secKey].dueño.toUpperCase() === careerName.toUpperCase())
+      .map(secKey => SECTOR_MAP[secKey]?.label || secKey)
+      .join(', ');
   };
 
   const sortedCareers = activeCareers.map(name => ({
@@ -379,7 +396,6 @@ export default function AuditorioApp() {
     color: obtenerColorCarrera(name, activeCareers)
   })).sort((a, b) => {
     if (b.owned !== a.owned) return b.owned - a.owned;
-    // Si empatan en sectores, ordenar por aciertos de la ronda actual
     return (marcadorRonda[b.name] || 0) - (marcadorRonda[a.name] || 0);
   });
 
@@ -411,7 +427,7 @@ export default function AuditorioApp() {
             </div>
           </div>
 
-          <div className="bg-[#050a18]/90 border border-slate-800 rounded-2xl p-4 shadow-md">
+          <div className="bg-[#050a18]/90 border border-slate-850 rounded-2xl p-4 shadow-md">
             <span style={{ color: s.color }} className="text-[9px] font-black tracking-widest uppercase block mb-2">
               Pregunta de Trivia
             </span>
@@ -461,7 +477,6 @@ export default function AuditorioApp() {
       );
     }
 
-    // Si no está bajo ataque, mostrar datos generales de pertenencia
     const hasOwner = sectorObj.dueño !== 'Libre';
     const ownerColor = hasOwner ? obtenerColorCarrera(sectorObj.dueño, carreras) : s.color;
 
@@ -483,7 +498,7 @@ export default function AuditorioApp() {
           </span>
         </div>
 
-        <div className="bg-[#050a18]/80 border border-slate-800 rounded-2xl p-4 text-center">
+        <div className="bg-[#050a18]/80 border border-slate-850 rounded-2xl p-4 text-center">
           <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest block">
             Control de Sector
           </span>
@@ -528,16 +543,7 @@ export default function AuditorioApp() {
       <Particles />
 
       {/* Header Premium de Auditorio */}
-      <header style={{
-        position: 'relative', zIndex: 10,
-        width: '100%', maxWidth: '1280px',
-        background: 'rgba(8,14,30,0.85)',
-        border: '1px solid rgba(6,182,212,0.2)',
-        backdropFilter: 'blur(20px)',
-        boxShadow: '0 0 60px rgba(6,182,212,0.08), 0 8px 32px rgba(0,0,0,0.6)',
-        animation: 'slideDown 0.7s ease-out',
-      }} className="flex flex-col md:flex-row items-center justify-between px-6 py-4 rounded-3xl mb-6 gap-4">
-        
+      <header style={CARD_STYLE} className="w-full flex flex-col md:flex-row items-center justify-between px-6 py-4 mb-6 gap-4 relative z-10 animate-slideDown">
         <div className="flex items-center gap-4.5">
           <div style={{
             width: 48, height: 48, borderRadius: '14px',
@@ -562,14 +568,14 @@ export default function AuditorioApp() {
 
         {/* Global state and connection parameters */}
         <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/60 border border-slate-800">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950/60 border border-slate-800/60">
             <Clock className="w-4 h-4 text-cyan-400 animate-pulse" />
             <span className="font-mono text-base font-black text-cyan-400">
               {formatearTiempo(tiempoGlobal)}
             </span>
           </div>
 
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/60 border border-slate-800">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-950/60 border border-slate-800/60">
             <span className="text-[9px] text-slate-500 font-black tracking-wider uppercase">PIN:</span>
             <span className="font-mono text-base font-black text-green-500 tracking-wider">
               {pin}
@@ -584,7 +590,7 @@ export default function AuditorioApp() {
               animation: 'blink 1.2s ease-in-out infinite',
               boxShadow: '0 0 8px #10b981',
             }} />
-            <span className="text-[9px] font-black text-green-500 letterSpacing-widest uppercase">
+            <span className="text-[9px] font-black text-green-500 tracking-widest uppercase">
               TRANSMISIÓN EN VIVO
             </span>
           </div>
@@ -597,12 +603,7 @@ export default function AuditorioApp() {
         
         {/* Lado Izquierdo: Mapa circular principal */}
         <section className="lg:col-span-7 flex flex-col">
-          <div style={{
-            background: 'rgba(8,14,30,0.75)',
-            border: '1px solid rgba(6,182,212,0.2)',
-            boxShadow: '0 0 60px rgba(6,182,212,0.06), 0 24px 60px rgba(0,0,0,0.7)',
-            animation: 'slideUp 0.8s ease-out both',
-          }} className="rounded-[30px] p-6 flex flex-col relative h-full min-h-[500px]">
+          <div style={CARD_STYLE} className="p-6 flex flex-col relative h-full min-h-[500px] animate-slideUp">
             
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
@@ -759,28 +760,6 @@ export default function AuditorioApp() {
                   })}
                 </svg>
 
-                {/* Center shield UNIPAZ decorativo */}
-                <div style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  width: '74px',
-                  height: '74px',
-                  borderRadius: '50%',
-                  background: '#0a0f1e',
-                  border: '3px solid #1e293b',
-                  boxShadow: '0 0 20px rgba(0,0,0,0.8)',
-                  zIndex: 3,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <span className="text-xl">🏛️</span>
-                  <span className="text-[7px] font-black tracking-widest text-slate-500 uppercase mt-0.5">UNIPAZ</span>
-                </div>
-
                 {!sectorSeleccionado && (
                   <div style={{
                     position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)',
@@ -836,16 +815,11 @@ export default function AuditorioApp() {
         <section className="lg:col-span-5 flex flex-col gap-6">
           
           {/* Marcador de Facultades */}
-          <div style={{
-            background: 'rgba(8,14,30,0.75)',
-            border: '1px solid rgba(6,182,212,0.15)',
-            boxShadow: '0 0 60px rgba(6,182,212,0.06)',
-            animation: 'slideUp 0.8s ease-out both',
-          }} className="rounded-[30px] p-6 flex flex-col">
+          <div style={CARD_STYLE} className="p-6 flex flex-col animate-slideUp">
             
             <div className="flex items-center gap-2 mb-4.5">
               <Trophy className="w-4.5 h-4.5 text-yellow-400 animate-pulse" />
-              <span className="text-[10px] font-black text-slate-350 tracking-[0.2em] uppercase">
+              <span className="text-[10px] font-black text-slate-355 tracking-[0.2em] uppercase">
                 Tabla de Posiciones
               </span>
             </div>
@@ -856,7 +830,17 @@ export default function AuditorioApp() {
                 return (
                   <div
                     key={c.name}
-                    className="bg-white/[0.02] border border-white/[0.04] rounded-2xl p-3.5 flex flex-col gap-2.5"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.02)',
+                      border: '1px solid rgba(255, 255, 255, 0.04)',
+                      borderRadius: '16px',
+                      padding: '12px 14px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '8px',
+                      transition: 'background 0.2s, border-color 0.2s'
+                    }}
+                    className="hover:bg-white/[0.04] hover:border-white/[0.08]"
                   >
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2.5 min-w-0">
@@ -893,7 +877,14 @@ export default function AuditorioApp() {
 
                     {/* Ronda Aciertos Status */}
                     <div className="flex justify-between items-center text-[9px] text-slate-500 font-bold uppercase tracking-wider">
-                      <span>Sectores Conquistados</span>
+                      <span>
+                        Sectores: {c.owned}{' '}
+                        {c.owned > 0 && (
+                          <span style={{ color: c.color }} className="normal-case font-semibold">
+                            ({getOwnedSectoresNames(c.name)})
+                          </span>
+                        )}
+                      </span>
                       {marcadorRonda[c.name] !== undefined && (
                         <span style={{ color: c.color }} className="font-black">
                           {marcadorRonda[c.name]} aciertos ronda
@@ -907,16 +898,11 @@ export default function AuditorioApp() {
           </div>
 
           {/* Registro de Actividades Recientes */}
-          <div style={{
-            background: 'rgba(8,14,30,0.75)',
-            border: '1px solid rgba(168,85,247,0.18)',
-            boxShadow: '0 0 60px rgba(168,85,247,0.03)',
-            animation: 'slideUp 0.8s ease-out both',
-          }} className="rounded-[30px] p-6 flex flex-col flex-1">
+          <div style={CARD_STYLE} className="p-6 flex flex-col flex-1 animate-slideUp">
             
             <div className="flex items-center gap-2 mb-4">
-              <Volume2 className="w-4 h-4 text-purple-400" />
-              <span className="text-[10px] font-black text-slate-350 tracking-[0.2em] uppercase">
+              <Volume2 className="w-4 h-4 text-cyan-400 animate-pulse" />
+              <span className="text-[10px] font-black text-slate-355 tracking-[0.2em] uppercase">
                 Historial de Actividad
               </span>
             </div>
@@ -926,8 +912,8 @@ export default function AuditorioApp() {
                 <div
                   key={item.id}
                   style={{
-                    background: 'rgba(168,85,247,0.03)',
-                    borderLeft: '3px solid #a855f7'
+                    background: 'rgba(6, 182, 212, 0.03)',
+                    borderLeft: '3px solid #06b6d4'
                   }}
                   className="p-3 rounded-xl flex flex-col gap-1.5 animate-fadeIn"
                 >
@@ -941,7 +927,7 @@ export default function AuditorioApp() {
               ))}
 
               {activityFeed.length === 0 && (
-                <div className="text-center text-slate-500 text-xs font-bold uppercase tracking-wider py-8">
+                <div className="text-center text-slate-550 text-xs font-bold uppercase tracking-wider py-8">
                   Esperando eventos de batalla...
                 </div>
               )}
@@ -966,18 +952,19 @@ export default function AuditorioApp() {
           animation: 'fadeIn 0.5s ease'
         }}>
           <div style={{
-            background: 'rgba(8, 14, 30, 0.9)',
-            border: '1px solid rgba(16, 185, 129, 0.3)',
-            borderRadius: '36px',
+            background: 'rgba(11, 15, 30, 0.95)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: '24px',
             maxWidth: '560px',
             width: '100%',
             padding: '32px',
-            boxShadow: '0 0 40px rgba(16, 185, 129, 0.15)',
+            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.8)',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             textAlign: 'center',
-            gap: '24px'
+            gap: '24px',
+            backdropFilter: 'blur(20px)'
           }}>
             <div className="text-7xl animate-bounce">🏆</div>
             <div>
@@ -1046,7 +1033,7 @@ export default function AuditorioApp() {
               })}
             </div>
 
-            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider margin-0">
+            <p className="text-[10px] text-slate-550 font-bold uppercase tracking-wider margin-0">
               Reinicia una partida en el panel de control del Expositor
             </p>
           </div>
