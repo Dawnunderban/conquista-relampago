@@ -1,3 +1,4 @@
+// Deploy: 2026-06-11T18:43 — preguntas reales + logo UNIPAZ + carreras default
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
