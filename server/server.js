@@ -23,7 +23,9 @@ const io = socketIo(server, {
   cors: {
     origin: '*',
     methods: ['GET', 'POST']
-  }
+  },
+  transports: ['polling', 'websocket'],
+  allowEIO3: true
 });
 
 const DEFAULT_CARRERAS = ["Medicina", "Ingeniería", "Ciencias", "Arte", "Derecho"];

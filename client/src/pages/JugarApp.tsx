@@ -55,7 +55,7 @@ export default function JugarApp() {
   }, []);
 
   useEffect(() => {
-    socketRef.current = io(SERVER_URL);
+    socketRef.current = io(SERVER_URL, { transports: ['polling', 'websocket'] });
     const socket = socketRef.current;
 
     socket.on('estado_actual', (estado) => {

@@ -231,7 +231,7 @@ export default function AuditorioApp() {
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
-    socketRef.current = io(SERVER_URL);
+    socketRef.current = io(SERVER_URL, { transports: ['polling', 'websocket'] });
     const socket = socketRef.current;
 
     socket.on('estado_actual', (estado) => {
