@@ -1002,7 +1002,7 @@ export default function AuditorioApp() {
             </div>
           </div>
 
-          {/* El QR ya se muestra en el banner superior — no duplicar aquí */
+          {/* El QR ya se muestra en el banner superior — no duplicar aquí */}
 
         </section>
       </main>
