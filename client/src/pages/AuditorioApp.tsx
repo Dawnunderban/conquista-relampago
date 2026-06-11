@@ -1,68 +1,48 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { StarField } from '../components/StarField';
-import { Zap, Users, Trophy, QrCode } from 'lucide-react';
+import { Zap, Users, Trophy, QrCode, Shield, Volume2, Clock } from 'lucide-react';
 
-// Territory map — 5 polygon regions in board-game style.
-// Borders meet at center (245,245). Each sector has baseColor and darkColor for gradients.
+// ── Constantes del mapa circular ───────────────────────────────────────────
+const CX = 245, CY = 245;
+const R_OUT = 170;
+const R_IN  = 52;
+const R_LBL = 118;
+const GAP   = 2.8;
+
+const toRad = (deg: number) => (deg * Math.PI) / 180;
+const pt = (deg: number, r: number) => ({
+  x: CX + r * Math.cos(toRad(deg)),
+  y: CY + r * Math.sin(toRad(deg)),
+});
+const fmt = (n: number) => n.toFixed(2);
+
+const makePath = (startDeg: number, endDeg: number) => {
+  const s = startDeg + GAP / 2;
+  const e = endDeg   - GAP / 2;
+  const o1 = pt(s, R_OUT), o2 = pt(e, R_OUT);
+  const i1 = pt(s, R_IN),  i2 = pt(e, R_IN);
+  const lg = endDeg - startDeg > 180 ? 1 : 0;
+  return (
+    `M${fmt(o1.x)},${fmt(o1.y)} ` +
+    `A${R_OUT},${R_OUT},0,${lg},1,${fmt(o2.x)},${fmt(o2.y)} ` +
+    `L${fmt(i2.x)},${fmt(i2.y)} ` +
+    `A${R_IN},${R_IN},0,${lg},0,${fmt(i1.x)},${fmt(i1.y)} Z`
+  );
+};
+
+const midPt = (startDeg: number, endDeg: number, r: number) => pt((startDeg + endDeg) / 2, r);
+
+// ── Sectores ────────────────────────────────────────────────────────────────
 const SECTORES = [
-  {
-    key: 'MEDICINA',
-    label: 'Medicina',
-    emoji: '🩺',
-    color: '#10b981',
-    dark: '#065f46',
-    freeColor: '#6ee7b7',
-    points: '0,0 490,0 490,125 310,195 245,245 180,195 0,125',
-    labelX: 245,
-    labelY: 65,
-  },
-  {
-    key: 'DERECHO',
-    label: 'Derecho',
-    emoji: '⚖️',
-    color: '#a855f7',
-    dark: '#6b21a8',
-    freeColor: '#d8b4fe',
-    points: '0,125 180,195 245,245 175,320 0,360',
-    labelX: 72,
-    labelY: 245,
-  },
-  {
-    key: 'ARTE',
-    label: 'Arte',
-    emoji: '🎨',
-    color: '#f97316',
-    dark: '#9a3412',
-    freeColor: '#fdba74',
-    points: '0,360 175,320 245,245 195,358 100,490 0,490',
-    labelX: 82,
-    labelY: 422,
-  },
-  {
-    key: 'CIENCIAS',
-    label: 'Ciencias',
-    emoji: '🔬',
-    color: '#eab308',
-    dark: '#854d0e',
-    freeColor: '#fde047',
-    points: '100,490 195,358 245,245 315,320 390,490',
-    labelX: 248,
-    labelY: 438,
-  },
-  {
-    key: 'INGENIERÍA',
-    label: 'Ingeniería',
-    emoji: '⚙️',
-    color: '#06b6d4',
-    dark: '#164e63',
-    freeColor: '#67e8f9',
-    points: '390,490 315,320 245,245 310,195 490,125 490,490',
-    labelX: 420,
-    labelY: 308,
-  },
+  { key: 'MEDICINA',   label: 'Medicina',   emoji: '🩺', color: '#10b981', dark: '#064e3b', startDeg: -126, endDeg: -54  },
+  { key: 'DERECHO',    label: 'Derecho',    emoji: '⚖️', color: '#d946ef', dark: '#701a75', startDeg: -54,  endDeg: 18   },
+  { key: 'ARTE',       label: 'Arte',       emoji: '🎨', color: '#f97316', dark: '#7c2d12', startDeg: 18,   endDeg: 90   },
+  { key: 'CIENCIAS',   label: 'Ciencias',   emoji: '🔬', color: '#eab308', dark: '#713f12', startDeg: 90,   endDeg: 162  },
+  { key: 'INGENIERÍA', label: 'Ingeniería', emoji: '⚙️', color: '#06b6d4', dark: '#164e63', startDeg: 162,  endDeg: 234  },
 ];
+const SECTOR_MAP = Object.fromEntries(SECTORES.map((s) => [s.key, s]));
 
+// ── Colores adicionales de carreras para la paleta ──────────────────────────
 const PALETTE = ['#2563eb', '#16a34a', '#0284c7', '#059669', '#3b82f6', '#10b981', '#0d9488'];
 
 function obtenerColorCarrera(carrera: string, carrerasConfiguradas: string[]) {
@@ -78,6 +58,124 @@ function obtenerColorCarrera(carrera: string, carrerasConfiguradas: string[]) {
     return PALETTE[index % PALETTE.length];
   }
   return '#64748b';
+}
+
+function getCareerEmoji(name: string) {
+  const key = name.toUpperCase();
+  if (key.includes('MEDICINA') || key.includes('MED')) return '🩺';
+  if (key.includes('DERECHO') || key.includes('ABOG')) return '⚖️';
+  if (key.includes('ARTE') || key.includes('DIS')) return '🎨';
+  if (key.includes('CIENCIAS') || key.includes('QUIM') || key.includes('BIO')) return '🔬';
+  if (key.includes('INGENIERÍA') || key.includes('SIST') || key.includes('IND')) return '⚙️';
+  return '🎓';
+}
+
+// ── Partículas flotantes animadas ──────────────────────────────────────────
+function Particles() {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    let animId: number;
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resize();
+    window.addEventListener('resize', resize);
+
+    const COLORS = ['#06b6d4', '#a855f7', '#f97316', '#eab308', '#10b981'];
+    const particles = Array.from({ length: 45 }, () => ({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+      r: Math.random() * 1.5 + 0.3,
+      dx: (Math.random() - 0.5) * 0.3,
+      dy: (Math.random() - 0.5) * 0.3,
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      alpha: Math.random() * 0.4 + 0.1,
+      pulse: Math.random() * Math.PI * 2,
+    }));
+
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach((p) => {
+        p.pulse += 0.015;
+        p.x += p.dx;
+        p.y += p.dy;
+        if (p.x < 0) p.x = canvas.width;
+        if (p.x > canvas.width) p.x = 0;
+        if (p.y < 0) p.y = canvas.height;
+        if (p.y > canvas.height) p.y = 0;
+
+        const alpha = p.alpha * (0.6 + 0.4 * Math.sin(p.pulse));
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.shadowColor = p.color;
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+        ctx.restore();
+      });
+      animId = requestAnimationFrame(draw);
+    };
+    draw();
+
+    return () => {
+      cancelAnimationFrame(animId);
+      window.removeEventListener('resize', resize);
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0 }}
+    />
+  );
+}
+
+// ── Grid animado de fondo ───────────────────────────────────────────────────
+function AnimatedGrid() {
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 0,
+      backgroundImage: `
+        linear-gradient(rgba(6,182,212,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(6,182,212,0.03) 1px, transparent 1px)
+      `,
+      backgroundSize: '48px 48px',
+      animation: 'gridMove 20s linear infinite',
+      pointerEvents: 'none'
+    }} />
+  );
+}
+
+// ── Orbes de fondo ─────────────────────────────────────────────────────────
+function BackgroundOrbs() {
+  return (
+    <>
+      <div style={{
+        position: 'fixed', top: '-15%', left: '-5%',
+        width: '50vw', height: '50vw', borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(6,182,212,0.05) 0%, transparent 70%)',
+        filter: 'blur(50px)', pointerEvents: 'none', zIndex: 0,
+        animation: 'orbFloat 12s ease-in-out infinite',
+      }} />
+      <div style={{
+        position: 'fixed', bottom: '-15%', right: '-5%',
+        width: '45vw', height: '45vw', borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(168,85,247,0.05) 0%, transparent 70%)',
+        filter: 'blur(50px)', pointerEvents: 'none', zIndex: 0,
+        animation: 'orbFloat 15s ease-in-out infinite reverse',
+      }} />
+    </>
+  );
 }
 
 const SERVER_URL = (window.location.origin === 'null' || window.location.protocol === 'file:') 
@@ -102,10 +200,20 @@ export default function AuditorioApp() {
   
   const [carreras, setCarreras] = useState<string[]>([]);
   const [marcadorRonda, setMarcadorRonda] = useState<Record<string, number>>({});
-  const [preguntaEnCurso, setPreguntaEnCurso] = useState<{ texto: string; tiempo: number } | null>(null);
+  const [preguntaEnCurso, setPreguntaEnCurso] = useState<{
+    texto: string;
+    opciones: { A: string; B: string; C: string; D: string };
+    tiempo: number;
+  } | null>(null);
   const [sectorEnCurso, setSectorEnCurso] = useState<string | null>(null);
-  const [rondaResumen, setRondaResumen] = useState<string>('');
+  const [rondaResumen, setRondaResumen] = useState('');
   const [podio, setPodio] = useState<{ carrera: string; sectoresDominados: number }[]>([]);
+
+  // Sector seleccionado manualmente para inspección en pantalla
+  const [sectorSeleccionado, setSectorSeleccionado] = useState<string | null>(null);
+
+  // Historial de actividad (rolling log)
+  const [activityFeed, setActivityFeed] = useState<{ id: string; text: string; time: string }[]>([]);
 
   const socketRef = useRef<Socket | null>(null);
 
@@ -123,7 +231,6 @@ export default function AuditorioApp() {
       if (estado.mapa) setMapa(estado.mapa);
       if (estado.carreras) {
         setCarreras(estado.carreras);
-        // Inicializar marcadores de ronda
         const m: Record<string, number> = {};
         estado.carreras.forEach((c: string) => {
           m[c] = 0;
@@ -142,6 +249,7 @@ export default function AuditorioApp() {
       setEstadoJuego('espera');
       setPodio([]);
       setRondaResumen('');
+      setActivityFeed([]);
       setSectorEnCurso(null);
       setPreguntaEnCurso(null);
     });
@@ -197,9 +305,9 @@ export default function AuditorioApp() {
       setTiempoRonda(0);
 
       if (maxAciertos === 0) {
-        setRondaResumen(`⌛ Ronda cerrada en ${sectorNombre}. Ninguna carrera obtuvo respuestas correctas.`);
+        setRondaResumen(`⌛ Ronda cerrada en ${sectorNombre}. Ningún acierto.`);
       } else if (hayEmpate) {
-        setRondaResumen(`⚔️ Empate en ${sectorNombre} con ${maxAciertos} aciertos. El territorio no cambia de dueño.`);
+        setRondaResumen(`⚔️ Empate en ${sectorNombre} con ${maxAciertos} aciertos. Sin cambios.`);
       } else {
         setRondaResumen(`🚩 ¡${dueño} conquistó el ${sectorNombre} con ${maxAciertos} aciertos!`);
       }
@@ -220,416 +328,736 @@ export default function AuditorioApp() {
     };
   }, []);
 
+  // Seleccionar automáticamente el sector bajo ataque para enfocar la pregunta
+  useEffect(() => {
+    if (sectorEnCurso) {
+      setSectorSeleccionado(sectorEnCurso);
+    }
+  }, [sectorEnCurso]);
+
+  // Rolling Feed de Actividades
+  useEffect(() => {
+    if (rondaResumen) {
+      const now = new Date();
+      const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+      setActivityFeed(prev => [
+        { id: Math.random().toString(), text: rondaResumen, time: timeStr },
+        ...prev.slice(0, 4)
+      ]);
+    }
+  }, [rondaResumen]);
+
   const formatearTiempo = (segundos: number) => {
     const min = Math.floor(segundos / 60);
     const sec = segundos % 60;
     return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
   };
 
+  const getSectorColor = (secKey: string) => {
+    const sectorObj = mapa[secKey];
+    if (sectorObj && sectorObj.dueño !== 'Libre') {
+      return obtenerColorCarrera(sectorObj.dueño, carreras);
+    }
+    return SECTOR_MAP[secKey]?.color || '#475569';
+  };
+
   const playUrl = pin !== '----' ? `${SERVER_URL}/jugar.html?pin=${pin}` : '';
   const qrCodeUrl = playUrl 
-    ? `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(playUrl)}&color=22c55e&bgcolor=f1f5f9`
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(playUrl)}&color=06b6d4&bgcolor=050a18`
     : '';
 
-  return (
-    <div className="relative min-h-screen bg-white overflow-hidden flex flex-col font-sans text-slate-950 p-4 lg:p-6">
-      <StarField />
-      
-      {/* Header */}
-      <header className="relative z-10 flex flex-col sm:flex-row justify-between items-center bg-slate-50/80 border border-slate-200 rounded-2xl py-4 px-6 backdrop-blur-md mb-6 gap-4 shadow-sm">
-        <div className="flex items-center gap-3">
-          <img 
-            src="/assets/unipaz.jpg" 
-            alt="UNIPAZ Logo" 
-            className="w-12 h-12 rounded-full border border-green-500/50 object-cover shadow-[0_0_15px_rgba(34,197,94,0.4)]"
-          />
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl lg:text-2xl font-black tracking-widest bg-gradient-to-r from-green-600 via-slate-900 to-blue-600 bg-clip-text text-transparent uppercase">
-                Responde y Avanza
-              </h1>
+  // Preparar lista de carreras e indicar cuántos sectores domina cada una
+  const activeCareers = carreras.length > 0 ? carreras : ['MEDICINA', 'DERECHO', 'ARTE', 'CIENCIAS', 'INGENIERÍA'];
+  const countCapturedSectors = (careerName: string) => {
+    return Object.values(mapa).filter(s => s.dueño.toUpperCase() === careerName.toUpperCase()).length;
+  };
+
+  const sortedCareers = activeCareers.map(name => ({
+    name,
+    owned: countCapturedSectors(name),
+    emoji: getCareerEmoji(name),
+    color: obtenerColorCarrera(name, activeCareers)
+  })).sort((a, b) => {
+    if (b.owned !== a.owned) return b.owned - a.owned;
+    // Si empatan en sectores, ordenar por aciertos de la ronda actual
+    return (marcadorRonda[b.name] || 0) - (marcadorRonda[a.name] || 0);
+  });
+
+  const maxSectorsOwned = Math.max(...sortedCareers.map(c => c.owned), 1);
+
+  // Renderizar el contenido lateral cuando se inspecciona o ataca un sector
+  const renderSectorPanel = (secKey: string) => {
+    const s = SECTOR_MAP[secKey];
+    if (!s) return null;
+    const isAttacked = sectorEnCurso === secKey;
+    const sectorObj = mapa[secKey] || { nombre: s.label, dueño: 'Libre' };
+
+    if (isAttacked && preguntaEnCurso) {
+      return (
+        <div className="flex flex-col gap-3.5 animate-fadeIn">
+          <div 
+            style={{
+              background: `linear-gradient(135deg, ${s.dark}cc, ${s.color}22)`,
+              border: `1px solid ${s.color}50`
+            }}
+            className="rounded-2xl p-4 text-center shadow-lg"
+          >
+            <div className="text-4xl mb-1">{s.emoji}</div>
+            <h3 style={{ color: s.color }} className="text-base font-black tracking-widest uppercase">
+              {s.label}
+            </h3>
+            <div className="text-[10px] text-yellow-400 font-extrabold tracking-wider mt-1.5 animate-pulse uppercase">
+              ⚡ Sector bajo ataque ⚡
             </div>
-            <p className="text-[10px] sm:text-xs text-slate-500 font-bold uppercase tracking-wider mt-0.5">
-              Pantalla del Auditorio · Blitz Territorial Académico · UNIPAZ
+          </div>
+
+          <div className="bg-[#050a18]/90 border border-slate-800 rounded-2xl p-4 shadow-md">
+            <span style={{ color: s.color }} className="text-[9px] font-black tracking-widest uppercase block mb-2">
+              Pregunta de Trivia
+            </span>
+            <p className="text-sm font-bold text-white leading-relaxed">
+              {preguntaEnCurso.texto}
             </p>
+          </div>
+
+          {preguntaEnCurso.opciones && (
+            <div className="flex flex-col gap-2">
+              {Object.entries(preguntaEnCurso.opciones).map(([key, opt]) => (
+                <div
+                  key={key}
+                  className="bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-300 flex items-center gap-3"
+                >
+                  <span 
+                    style={{ color: s.color, backgroundColor: `${s.color}15` }}
+                    className="w-5 h-5 rounded-md flex items-center justify-center font-mono font-black"
+                  >
+                    {key}
+                  </span>
+                  <span className="truncate">{opt}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* QR para contestar */}
+          <div className="flex flex-col items-center gap-2 mt-2">
+            {qrCodeUrl && (
+              <div 
+                style={{ borderColor: s.color, boxShadow: `0 0 15px ${s.color}33` }}
+                className="p-2.5 bg-[#050a18] border-2 rounded-xl"
+              >
+                <img
+                  src={qrCodeUrl}
+                  alt="QR Code"
+                  className="w-28 h-28 rounded-lg"
+                />
+              </div>
+            )}
+            <span style={{ color: s.color }} className="text-[9px] font-black tracking-wider uppercase">
+              📱 Escanea para contestar
+            </span>
+          </div>
+        </div>
+      );
+    }
+
+    // Si no está bajo ataque, mostrar datos generales de pertenencia
+    const hasOwner = sectorObj.dueño !== 'Libre';
+    const ownerColor = hasOwner ? obtenerColorCarrera(sectorObj.dueño, carreras) : s.color;
+
+    return (
+      <div className="flex flex-col gap-3.5 animate-fadeIn">
+        <div 
+          style={{
+            background: `linear-gradient(135deg, ${s.dark}90, ${s.color}15)`,
+            border: `1px solid ${s.color}33`
+          }}
+          className="rounded-2xl p-4 text-center"
+        >
+          <div className="text-4xl mb-1">{s.emoji}</div>
+          <h3 style={{ color: s.color }} className="text-base font-black tracking-widest uppercase">
+            {s.label}
+          </h3>
+          <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block mt-1">
+            Territorio Académico
+          </span>
+        </div>
+
+        <div className="bg-[#050a18]/80 border border-slate-800 rounded-2xl p-4 text-center">
+          <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest block">
+            Control de Sector
+          </span>
+          <h4 
+            style={{ color: ownerColor }}
+            className="text-sm font-black uppercase mt-1.5"
+          >
+            {hasOwner ? `Dominado por ${sectorObj.dueño}` : 'Libre (Sin Conquistar)'}
+          </h4>
+        </div>
+
+        <div className="flex flex-col items-center gap-2 mt-3">
+          {qrCodeUrl ? (
+            <div 
+              style={{ borderColor: s.color, boxShadow: `0 0 15px ${s.color}20` }}
+              className="p-2.5 bg-[#050a18] border-2 rounded-xl"
+            >
+              <img
+                src={qrCodeUrl}
+                alt="QR Code"
+                className="w-28 h-28 rounded-lg"
+              />
+            </div>
+          ) : (
+            <div className="w-28 h-28 border border-dashed border-slate-800 rounded-xl flex items-center justify-center text-slate-600 text-xs font-bold uppercase">
+              Lobby...
+            </div>
+          )}
+          <span style={{ color: s.color }} className="text-[9px] font-black tracking-wider uppercase">
+            📱 Escanea para entrar
+          </span>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="relative min-h-screen text-white flex flex-col items-center p-4 lg:p-6 overflow-hidden select-none">
+      {/* Elementos estéticos de fondo */}
+      <BackgroundOrbs />
+      <AnimatedGrid />
+      <Particles />
+
+      {/* Header Premium de Auditorio */}
+      <header style={{
+        position: 'relative', zIndex: 10,
+        width: '100%', maxWidth: '1280px',
+        background: 'rgba(8,14,30,0.85)',
+        border: '1px solid rgba(6,182,212,0.2)',
+        backdropFilter: 'blur(20px)',
+        boxShadow: '0 0 60px rgba(6,182,212,0.08), 0 8px 32px rgba(0,0,0,0.6)',
+        animation: 'slideDown 0.7s ease-out',
+      }} className="flex flex-col md:flex-row items-center justify-between px-6 py-4 rounded-3xl mb-6 gap-4">
+        
+        <div className="flex items-center gap-4.5">
+          <div style={{
+            width: 48, height: 48, borderRadius: '14px',
+            background: 'linear-gradient(135deg,#06b6d4,#a855f7)',
+            fontSize: 24,
+            boxShadow: '0 0 25px rgba(6,182,212,0.5)',
+            animation: 'logoPulse 2s ease-in-out infinite',
+          }} className="flex items-center justify-center">⚡</div>
+          <div>
+            <div style={{
+              fontSize: '24px', fontWeight: 900, letterSpacing: '0.2em',
+              background: 'linear-gradient(90deg,#06b6d4,#a855f7,#f97316)',
+              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+              animation: 'shimmer 3s linear infinite',
+              backgroundSize: '200%',
+            }}>RESPONDE Y AVANZA</div>
+            <div className="text-[9px] text-cyan-400/80 tracking-[0.2em] font-extrabold uppercase mt-0.5">
+              Batalla Interfacultades · UNIPAZ
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-6 bg-slate-100 border border-slate-200 rounded-xl px-4 py-2">
-          <div className="text-center sm:text-right">
-            <span className="text-[10px] text-slate-500 font-bold tracking-widest uppercase block">PIN de acceso</span>
-            <span className="font-mono text-2xl lg:text-3xl font-black text-green-600 tracking-widest drop-shadow-[0_0_8px_rgba(34,197,94,0.4)]">
+        {/* Global state and connection parameters */}
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/60 border border-slate-800">
+            <Clock className="w-4 h-4 text-cyan-400 animate-pulse" />
+            <span className="font-mono text-base font-black text-cyan-400">
+              {formatearTiempo(tiempoGlobal)}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/60 border border-slate-800">
+            <span className="text-[9px] text-slate-500 font-black tracking-wider uppercase">PIN:</span>
+            <span className="font-mono text-base font-black text-green-500 tracking-wider">
               {pin}
+            </span>
+          </div>
+
+          <div style={{
+            background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)',
+          }} className="flex items-center gap-2 px-3 py-1.5 rounded-xl">
+            <div style={{
+              width: 8, height: 8, borderRadius: '50%', background: '#10b981',
+              animation: 'blink 1.2s ease-in-out infinite',
+              boxShadow: '0 0 8px #10b981',
+            }} />
+            <span className="text-[9px] font-black text-green-500 letterSpacing-widest uppercase">
+              TRANSMISIÓN EN VIVO
             </span>
           </div>
         </div>
       </header>
 
-      {/* Main Grid */}
-      <main className="relative z-10 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+      {/* Grid Principal */}
+      <main style={{ position: 'relative', zIndex: 10, width: '100%', maxWidth: '1280px' }} 
+            className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch w-full">
         
-        {/* Left Side: Game Stats, QR, Active Round Timer */}
-        <section className="lg:col-span-4 flex flex-col gap-6">
-          
-          {/* Partida Info Card */}
-          <div className="bg-slate-50/80 border border-slate-200 rounded-3xl p-5 flex flex-col gap-4 backdrop-blur-md relative overflow-hidden shadow-sm">
-            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-green-500 via-transparent to-transparent pointer-events-none" />
+        {/* Lado Izquierdo: Mapa circular principal */}
+        <section className="lg:col-span-7 flex flex-col">
+          <div style={{
+            background: 'rgba(8,14,30,0.75)',
+            border: '1px solid rgba(6,182,212,0.2)',
+            boxShadow: '0 0 60px rgba(6,182,212,0.06), 0 24px 60px rgba(0,0,0,0.7)',
+            animation: 'slideUp 0.8s ease-out both',
+          }} className="rounded-[30px] p-6 flex flex-col relative h-full min-h-[500px]">
             
-            <h2 className="text-slate-500 text-xs font-bold tracking-widest uppercase border-b border-slate-200 pb-2">
-              Estado de la Partida
-            </h2>
-
-            <div className="flex justify-between items-center py-1">
-              <span className="text-sm font-semibold text-slate-700">Usuarios Conectados</span>
-              <div className="flex items-center gap-1.5 bg-green-500/10 border border-green-500/20 px-3 py-1 rounded-full text-green-600 font-bold text-sm">
-                <Users className="w-4 h-4" />
-                {usuariosConectados}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Shield className="w-4 h-4 text-cyan-400" />
+                <span className="text-[10px] font-black text-slate-400 tracking-[0.2em] uppercase">
+                  Control Territorial en Vivo
+                </span>
               </div>
-            </div>
-
-            <div className="flex justify-between items-center py-1 border-t border-slate-200 pt-3">
-              <span className="text-sm font-semibold text-slate-700">Tiempo de Juego</span>
-              <span className="font-mono text-2xl font-black text-blue-600 drop-shadow-[0_0_8px_rgba(37,99,235,0.3)]">
-                {formatearTiempo(tiempoGlobal)}
-              </span>
-            </div>
-          </div>
-
-          {/* QR Code Card */}
-          {estadoJuego !== 'finalizado' && (
-            <div className="bg-slate-50/80 border border-slate-200 rounded-3xl p-5 flex flex-col items-center justify-center text-center gap-4 backdrop-blur-md relative overflow-hidden shadow-sm">
-              <div className="absolute inset-0 opacity-5 bg-[radial-gradient(ellipse_at_center,_rgba(34,197,94,0.3),_transparent)] pointer-events-none" />
-              
-              <div>
-                <h3 className="text-slate-900 font-black text-sm tracking-wider uppercase">¡Únete a la Batalla!</h3>
-                <p className="text-[10px] text-slate-500 mt-1">Escanea con tu celular para participar</p>
-              </div>
-
-              {qrCodeUrl ? (
-                <div className="p-3 bg-slate-100 border-2 border-green-500/40 rounded-2xl shadow-[0_0_20px_rgba(34,197,94,0.1)]">
-                  <img src={qrCodeUrl} alt="QR Code" className="w-36 h-36 rounded-lg" />
-                </div>
-              ) : (
-                <div className="w-36 h-36 border border-dashed border-slate-300 rounded-2xl flex items-center justify-center text-slate-400">
-                  <QrCode className="w-10 h-10 animate-pulse" />
+              {preguntaEnCurso && (
+                <div className="flex items-center gap-1.5 bg-red-500/10 border border-red-500/30 px-2 py-0.5 rounded-full text-[9px] font-bold text-red-400 animate-pulse uppercase">
+                  <span>Pregunta Restante:</span>
+                  <span className="font-mono">{tiempoRonda}s</span>
                 </div>
               )}
+            </div>
+
+            {/* SVG slices circular map container */}
+            <div style={{
+              position: 'relative',
+              aspectRatio: '1',
+              width: '100%',
+              maxWidth: '460px',
+              margin: 'auto',
+              background: 'rgba(13,27,56,0.3)',
+              borderRadius: '24px',
+              border: '1px solid #1a2e4a',
+              overflow: 'hidden'
+            }} className="flex items-center justify-center p-2.5">
               
-              <span className="text-[10px] font-mono text-green-600/80 select-all break-all px-2 max-w-full truncate">
-                {playUrl || 'Generando PIN de juego...'}
-              </span>
-            </div>
-          )}
-
-          {/* Ronda Timer Card */}
-          {preguntaEnCurso && (
-            <div className="bg-slate-50/90 border border-red-500/20 rounded-3xl p-5 flex flex-col items-center justify-center text-center gap-4 backdrop-blur-md relative overflow-hidden shadow-[0_0_15px_rgba(239,68,68,0.05)] animate-pulse">
-              <span className="text-red-500 text-xs font-black tracking-widest uppercase">
-                Tiempo de la Pregunta
-              </span>
-              <div className="relative w-24 h-24">
-                <svg className="w-24 h-24 -rotate-90" viewBox="0 0 64 64">
-                  <circle cx="32" cy="32" r="26" fill="none" stroke="#e2e8f0" strokeWidth="4" />
-                  <circle 
-                    cx="32" 
-                    cy="32" 
-                    r="26" 
-                    fill="none" 
-                    stroke={tiempoRonda > 5 ? '#22c55e' : '#ef4444'} 
-                    strokeWidth="4"
-                    strokeDasharray={`${2 * Math.PI * 26}`}
-                    strokeDashoffset={`${2 * Math.PI * 26 * (1 - (tiempoRonda / maxTiempoRonda))}`}
-                    strokeLinecap="round" 
-                    style={{ transition: 'stroke-dashoffset 1s linear, stroke 0.3s' }} 
-                  />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className={`font-mono font-black text-3xl ${tiempoRonda > 5 ? 'text-green-400' : 'text-red-400'}`}>
-                    {tiempoRonda}
-                  </span>
-                </div>
+              {/* Botones rápidos de selección flotantes */}
+              <div className="absolute top-3 left-3 z-10 flex flex-col gap-1.5">
+                {SECTORES.map((sec) => {
+                  const isAct = sectorSeleccionado === sec.key;
+                  const currentStrokeColor = getSectorColor(sec.key);
+                  return (
+                    <button
+                      key={sec.key}
+                      onClick={() => setSectorSeleccionado(isAct ? null : sec.key)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '4px 10px',
+                        borderRadius: '20px',
+                        border: `1px solid ${isAct ? currentStrokeColor : 'rgba(255,255,255,0.08)'}`,
+                        background: isAct ? `${currentStrokeColor}20` : 'rgba(5,10,24,0.85)',
+                        color: isAct ? '#fff' : '#94a3b8',
+                        fontSize: '8px',
+                        fontWeight: '800',
+                        cursor: 'pointer',
+                        backdropFilter: 'blur(8px)',
+                        letterSpacing: '0.05em',
+                        boxShadow: isAct ? `0 0 10px ${currentStrokeColor}25` : 'none',
+                        transition: 'all 0.15s'
+                      }}
+                    >
+                      <span>{sec.emoji}</span>
+                      <span>{sec.label.toUpperCase()}</span>
+                    </button>
+                  );
+                })}
               </div>
-            </div>
-          )}
-        </section>
 
-        {/* Center / Right Side: Map & Leaderboards */}
-        <section className="lg:col-span-8 flex flex-col gap-6 justify-between">
-          
-          {/* Battle Log Box */}
-          <div className="bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3 shadow-sm text-center">
-            <span className="text-[10px] text-slate-500 font-bold tracking-widest uppercase block mb-1">
-              Registro de Actividad
-            </span>
-            <p className="text-sm font-black tracking-wide text-blue-600">
-              {rondaResumen || 'Esperando inicio del juego...'}
-            </p>
-          </div>
+              {/* Contenedor del mapa real */}
+              <div style={{ width: '100%', height: '100%', position: 'relative' }} className="aspect-square">
+                <img
+                  src="/assets/mapa-conquista.png"
+                  alt="Mapa Conquista Relámpago"
+                  style={{
+                    position: 'absolute', inset: 0,
+                    width: '100%', height: '100%', objectFit: 'cover',
+                    borderRadius: '16px',
+                    zIndex: 1,
+                  }}
+                />
 
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 flex-1 items-stretch">
-            
-            {/* Map Container — Board-game style territory map */}
-            <div className="md:col-span-7 bg-slate-900 border border-slate-700 rounded-3xl p-4 flex flex-col items-center justify-center relative shadow-xl min-h-[420px] overflow-hidden">
-              {/* Background grid texture */}
-              <div className="absolute inset-0 opacity-10" style={{
-                backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)',
-                backgroundSize: '20px 20px'
-              }} />
-
-              <span className="absolute top-3 text-[10px] font-black text-slate-400 tracking-[0.3em] uppercase z-10">
-                ⚔ Mapa Territorial ⚔
-              </span>
-
-              <div className="relative w-full max-w-[380px] aspect-square mt-5">
                 <svg
                   viewBox="0 0 490 490"
                   xmlns="http://www.w3.org/2000/svg"
-                  className="w-full h-full select-none"
+                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 2 }}
                 >
                   <defs>
-                    {/* Per-sector radial gradients */}
-                    {SECTORES.map((s) => {
-                      const sectorObj = mapa[s.key] || { nombre: s.label, dueño: 'Libre' };
-                      const dueño = sectorObj.dueño;
-                      const hasOwner = dueño !== 'Libre';
-                      const fillColor = hasOwner ? obtenerColorCarrera(dueño, carreras) : s.freeColor;
-                      return (
-                        <radialGradient key={s.key} id={`grad-${s.key}`} cx="245" cy="245" r="300" gradientUnits="userSpaceOnUse">
-                          <stop offset="0%" stopColor={fillColor} stopOpacity="0.55" />
-                          <stop offset="100%" stopColor={fillColor} stopOpacity="0.18" />
-                        </radialGradient>
-                      );
-                    })}
-                    {/* Glow filters */}
                     {SECTORES.map((s) => (
-                      <filter key={s.key} id={`glow-${s.key}`} x="-30%" y="-30%" width="160%" height="160%">
-                        <feGaussianBlur stdDeviation="7" result="blur" />
+                      <filter key={s.key} id={`gf-${s.key}`} x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur stdDeviation="8" result="blur1" />
                         <feMerge>
-                          <feMergeNode in="blur" />
+                          <feMergeNode in="blur1" />
                           <feMergeNode in="SourceGraphic" />
                         </feMerge>
                       </filter>
                     ))}
-                    <filter id="attack-glow" x="-40%" y="-40%" width="180%" height="180%">
-                      <feGaussianBlur stdDeviation="10" result="blur" />
-                      <feMerge>
-                        <feMergeNode in="blur" />
-                        <feMergeNode in="SourceGraphic" />
-                      </feMerge>
-                    </filter>
-                    <filter id="label-shadow">
-                      <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#000" floodOpacity="0.5" />
-                    </filter>
                   </defs>
 
-                  {/* Dark canvas */}
-                  <rect x="0" y="0" width="490" height="490" fill="#0f172a" rx="12" />
-
-                  {/* Territory Polygons */}
                   {SECTORES.map((s) => {
-                    const sectorObj = mapa[s.key] || { nombre: s.label, dueño: 'Libre' };
-                    const dueño = sectorObj.dueño;
-                    const hasOwner = dueño !== 'Libre';
-                    const ownerColor = hasOwner ? obtenerColorCarrera(dueño, carreras) : s.color;
+                    const isAct = sectorSeleccionado === s.key;
                     const isAttacked = sectorEnCurso === s.key;
+                    const path = makePath(s.startDeg, s.endDeg);
+                    const lp = midPt(s.startDeg, s.endDeg, R_LBL);
+                    const currentStrokeColor = getSectorColor(s.key);
 
                     return (
-                      <g key={s.key}>
-                        {/* Solid gradient fill */}
-                        <polygon
-                          points={s.points}
-                          fill={`url(#grad-${s.key})`}
-                          className="transition-all duration-500"
+                      <g
+                        key={s.key}
+                        onClick={() => setSectorSeleccionado(isAct ? null : s.key)}
+                        style={{ cursor: 'pointer', pointerEvents: 'all' }}
+                      >
+                        {/* Relleno translúcido */}
+                        <path
+                          d={path}
+                          fill={isAttacked ? '#fbbf24' : currentStrokeColor}
+                          opacity={isAct ? 0.35 : isAttacked ? 0.25 : 0.06}
+                          style={{ transition: 'opacity 0.25s ease, fill 0.4s ease' }}
                         />
-                        {/* Thick white border — board-game style */}
-                        <polygon
-                          points={s.points}
+                        {/* Borde neón */}
+                        <path
+                          d={path}
                           fill="none"
-                          stroke="white"
-                          strokeWidth="2"
-                          strokeLinejoin="round"
-                          opacity="0.15"
-                        />
-                        {/* Colored glowing border */}
-                        <polygon
-                          points={s.points}
-                          fill="none"
-                          stroke={isAttacked ? '#fbbf24' : ownerColor}
-                          strokeWidth={isAttacked ? 4 : hasOwner ? 3 : 1.5}
-                          strokeLinejoin="round"
-                          opacity={isAttacked ? 1 : hasOwner ? 0.95 : 0.4}
-                          filter={`url(#glow-${s.key})`}
-                          className={`transition-all duration-300 ${isAttacked ? 'animate-pulse' : ''}`}
+                          stroke={isAttacked ? '#fbbf24' : currentStrokeColor}
+                          strokeWidth={isAct ? 6.5 : isAttacked ? 5 : 2.5}
+                          opacity={isAct ? 1 : isAttacked ? 1 : 0.4}
+                          filter={`url(#gf-${s.key})`}
+                          className={isAttacked ? 'animate-pulse' : ''}
+                          style={{ transition: 'all 0.25s ease, stroke 0.4s ease' }}
                         />
 
-                        {/* Label pill badge */}
-                        <rect
-                          x={s.labelX - 46}
-                          y={s.labelY - 14}
-                          width={92}
-                          height={26}
-                          rx={13}
-                          fill={isAttacked ? '#fbbf24' : ownerColor}
-                          opacity={1}
-                          filter="url(#label-shadow)"
-                          className="transition-all duration-300"
-                        />
-                        {/* Label text */}
-                        <text
-                          x={s.labelX}
-                          y={s.labelY + 4}
-                          textAnchor="middle"
-                          fontSize="9.5"
-                          fontWeight="900"
-                          fill={isAttacked ? '#1c1917' : '#ffffff'}
-                          letterSpacing="0.08em"
-                          className="select-none"
-                          filter="url(#label-shadow)"
-                        >
-                          {isAttacked ? '⚡ ATAQUE' : hasOwner ? dueño.substring(0, 12).toUpperCase() : s.label.toUpperCase()}
-                        </text>
-                        {/* Small emoji above badge */}
-                        <text
-                          x={s.labelX}
-                          y={s.labelY - 18}
-                          textAnchor="middle"
-                          fontSize="16"
-                          className="select-none"
-                        >
-                          {s.emoji}
-                        </text>
+                        {/* Etiqueta flotante */}
+                        {isAct && (
+                          <g>
+                            <rect
+                              x={lp.x - 55}
+                              y={lp.y - 14}
+                              width={110}
+                              height={28}
+                              rx="14"
+                              fill="#050a18ee"
+                              stroke={isAttacked ? '#fbbf24' : currentStrokeColor}
+                              strokeWidth="1.8"
+                            />
+                            <text
+                              x={lp.x}
+                              y={lp.y + 5}
+                              textAnchor="middle"
+                              fontSize="10"
+                              fontWeight="800"
+                              fill="#ffffff"
+                              style={{ fontFamily: 'Inter, sans-serif', pointerEvents: 'none' }}
+                            >
+                              {s.label.toUpperCase()}
+                            </text>
+                          </g>
+                        )}
                       </g>
                     );
                   })}
-
-                  {/* Center shield emblem */}
-                  <circle cx="245" cy="245" r="40" fill="#1e293b" stroke="#475569" strokeWidth="3" />
-                  <circle cx="245" cy="245" r="32" fill="#0f172a" stroke="#334155" strokeWidth="1.5" />
-                  <text x="245" y="252" textAnchor="middle" fontSize="24" className="select-none">🏛️</text>
-                  <text x="245" y="272" textAnchor="middle" fontSize="6.5" fontWeight="900" fill="#64748b" letterSpacing="0.18em" className="select-none">UNIPAZ</text>
                 </svg>
-              </div>
 
-              {/* Map Footer Legend */}
-              <div className="absolute bottom-3 flex flex-wrap justify-center gap-2 px-3">
-                {SECTORES.map(s => (
-                  <span
-                    key={s.key}
-                    className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
-                    style={{ backgroundColor: s.color + '33', color: s.freeColor, border: `1px solid ${s.color}55` }}
-                  >
-                    <span>{s.emoji}</span>
-                    <span>{s.label}</span>
-                  </span>
-                ))}
-              </div>
-            </div>
+                {/* Center shield UNIPAZ decorativo */}
+                <div style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  width: '74px',
+                  height: '74px',
+                  borderRadius: '50%',
+                  background: '#0a0f1e',
+                  border: '3px solid #1e293b',
+                  boxShadow: '0 0 20px rgba(0,0,0,0.8)',
+                  zIndex: 3,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <span className="text-xl">🏛️</span>
+                  <span className="text-[7px] font-black tracking-widest text-slate-500 uppercase mt-0.5">UNIPAZ</span>
+                </div>
 
-            {/* Live Leaderboard for Active Round */}
-            <div className="md:col-span-5 bg-slate-50 border border-slate-200 rounded-3xl p-5 flex flex-col shadow-sm min-h-[420px]">
-              <h2 className="text-slate-500 text-xs font-bold tracking-widest uppercase border-b border-slate-200 pb-3 flex items-center justify-between">
-                <span>Ronda Activa</span>
-                <span className="text-[10px] text-green-600 bg-green-500/10 px-2 py-0.5 rounded-full">Aciertos</span>
-              </h2>
-
-              <div className="flex-1 flex flex-col justify-center gap-3.5 py-4">
-                {carreras.length === 0 ? (
-                  <div className="text-center text-slate-400 text-xs py-10 font-bold">
-                    Esperando configuración de carreras...
+                {!sectorSeleccionado && (
+                  <div style={{
+                    position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)',
+                    padding: '8px 18px', borderRadius: '20px',
+                    background: 'rgba(2,6,15,0.9)',
+                    border: '1px solid rgba(6,182,212,0.3)',
+                    color: '#ffffff', zIndex: 3, fontSize: '10px', fontWeight: '800',
+                    backdropFilter: 'blur(8px)', whiteSpace: 'nowrap',
+                    letterSpacing: '0.08em',
+                    boxShadow: '0 0 15px rgba(6,182,212,0.2)'
+                  }}>
+                    👆 SELECCIONA UN SECTOR EN EL MAPA
                   </div>
-                ) : (
-                  carreras.map((carrera) => {
-                    const aciertos = marcadorRonda[carrera] || 0;
-                    const maxAciertos = Math.max(...Object.values(marcadorRonda), 1);
-                    const percentage = (aciertos / maxAciertos) * 100;
-                    const color = obtenerColorCarrera(carrera, carreras);
-
-                    return (
-                      <div key={carrera} className="flex flex-col gap-1">
-                        <div className="flex justify-between items-center text-xs font-black">
-                          <span className="truncate text-slate-800 max-w-[150px]">{carrera}</span>
-                          <span style={{ color }}>{aciertos} aciertos</span>
-                        </div>
-                        <div className="w-full h-2.5 bg-slate-200 border border-slate-300 rounded-full overflow-hidden p-0.5">
-                          <div 
-                            className="h-full rounded-full transition-all duration-500" 
-                            style={{ 
-                              width: `${percentage}%`, 
-                              backgroundColor: color,
-                              boxShadow: `0 0 10px ${color}`
-                            }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })
                 )}
               </div>
+            </div>
 
-              <div className="text-[9px] text-slate-450 text-center font-bold tracking-wider border-t border-slate-200 pt-2.5 uppercase">
-                Actualización en Tiempo Real
+            {/* Panel de preguntas overlay lateral flotante */}
+            {sectorSeleccionado && (
+              <div style={{
+                position: 'absolute',
+                top: 24,
+                right: 24,
+                width: '290px',
+                background: 'rgba(7,11,26,0.97)',
+                border: `1.5px solid ${getSectorColor(sectorSeleccionado)}70`,
+                borderRadius: '20px',
+                padding: '16px',
+                boxShadow: `0 0 40px ${getSectorColor(sectorSeleccionado)}25, 0 15px 40px rgba(0,0,0,0.8)`,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+                maxHeight: 'calc(100% - 48px)',
+                overflowY: 'auto',
+                backdropFilter: 'blur(20px)',
+                zIndex: 20,
+                animation: 'slideLeft 0.35s cubic-bezier(0.16, 1, 0.3, 1)'
+              }}>
+                <button
+                  onClick={() => setSectorSeleccionado(null)}
+                  className="bg-white/5 border border-white/10 hover:bg-white/10 text-slate-400 text-[9px] font-black py-1.5 px-3 rounded-lg self-end cursor-pointer tracking-wider"
+                >
+                  ✕ CERRAR
+                </button>
+                {renderSectorPanel(sectorSeleccionado)}
               </div>
+            )}
+
+          </div>
+        </section>
+
+        {/* Lado Derecho: Marcadores, actividad y podio */}
+        <section className="lg:col-span-5 flex flex-col gap-6">
+          
+          {/* Marcador de Facultades */}
+          <div style={{
+            background: 'rgba(8,14,30,0.75)',
+            border: '1px solid rgba(6,182,212,0.15)',
+            boxShadow: '0 0 60px rgba(6,182,212,0.06)',
+            animation: 'slideUp 0.8s ease-out both',
+          }} className="rounded-[30px] p-6 flex flex-col">
+            
+            <div className="flex items-center gap-2 mb-4.5">
+              <Trophy className="w-4.5 h-4.5 text-yellow-400 animate-pulse" />
+              <span className="text-[10px] font-black text-slate-350 tracking-[0.2em] uppercase">
+                Tabla de Posiciones
+              </span>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              {sortedCareers.map((c, idx) => {
+                const percent = maxSectorsOwned > 0 ? (c.owned / maxSectorsOwned) * 100 : 0;
+                return (
+                  <div
+                    key={c.name}
+                    className="bg-white/[0.02] border border-white/[0.04] rounded-2xl p-3.5 flex flex-col gap-2.5"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span style={{
+                          color: idx === 0 ? '#fbbf24' : idx === 1 ? '#cbd5e1' : idx === 2 ? '#b45309' : '#64748b',
+                          background: 'rgba(255,255,255,0.03)',
+                        }} className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0">
+                          {idx + 1}
+                        </span>
+                        <span style={{ color: c.color }} className="text-xs font-black truncate uppercase tracking-wider">
+                          {c.emoji} {c.name}
+                        </span>
+                      </div>
+                      <div className="flex items-baseline gap-0.5 shrink-0">
+                        <span className="font-mono font-black text-sm text-white">
+                          {c.owned}
+                        </span>
+                        <span className="text-[8px] text-slate-550 font-bold uppercase tracking-wider">SEC</span>
+                      </div>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div className="w-full h-1 bg-[#111827] rounded-full overflow-hidden">
+                      <div 
+                        style={{
+                          width: `${percent}%`,
+                          background: c.color,
+                          boxShadow: `0 0 8px ${c.color}`,
+                          transition: 'width 0.8s ease-out'
+                        }}
+                        className="h-full rounded-full"
+                      />
+                    </div>
+
+                    {/* Ronda Aciertos Status */}
+                    <div className="flex justify-between items-center text-[9px] text-slate-500 font-bold uppercase tracking-wider">
+                      <span>Sectores Conquistados</span>
+                      {marcadorRonda[c.name] !== undefined && (
+                        <span style={{ color: c.color }} className="font-black">
+                          {marcadorRonda[c.name]} aciertos ronda
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
+
+          {/* Registro de Actividades Recientes */}
+          <div style={{
+            background: 'rgba(8,14,30,0.75)',
+            border: '1px solid rgba(168,85,247,0.18)',
+            boxShadow: '0 0 60px rgba(168,85,247,0.03)',
+            animation: 'slideUp 0.8s ease-out both',
+          }} className="rounded-[30px] p-6 flex flex-col flex-1">
+            
+            <div className="flex items-center gap-2 mb-4">
+              <Volume2 className="w-4 h-4 text-purple-400" />
+              <span className="text-[10px] font-black text-slate-350 tracking-[0.2em] uppercase">
+                Historial de Actividad
+              </span>
+            </div>
+
+            <div className="flex flex-col gap-3 overflow-y-auto no-scrollbar flex-1 max-h-[160px] lg:max-h-none">
+              {activityFeed.map((item) => (
+                <div
+                  key={item.id}
+                  style={{
+                    background: 'rgba(168,85,247,0.03)',
+                    borderLeft: '3px solid #a855f7'
+                  }}
+                  className="p-3 rounded-xl flex flex-col gap-1.5 animate-fadeIn"
+                >
+                  <p className="margin-0 text-xs font-bold text-slate-200 leading-normal">
+                    {item.text}
+                  </p>
+                  <span className="text-[8px] text-slate-550 font-mono self-end">
+                    {item.time}
+                  </span>
+                </div>
+              ))}
+
+              {activityFeed.length === 0 && (
+                <div className="text-center text-slate-500 text-xs font-bold uppercase tracking-wider py-8">
+                  Esperando eventos de batalla...
+                </div>
+              )}
+            </div>
+          </div>
+
         </section>
       </main>
 
-      {/* Podio Overlay Modal on Game Finalized */}
+      {/* Podio Overlay Modal al finalizar partida */}
       {estadoJuego === 'finalizado' && podio.length > 0 && (
-        <div className="absolute inset-0 bg-white/95 z-50 flex items-center justify-center p-4 backdrop-blur-lg animate-fade-in">
-          <div className="bg-slate-50 border border-green-500/30 rounded-[36px] max-w-[620px] w-full p-8 shadow-[0_0_40px_rgba(34,197,94,0.15)] flex flex-col items-center text-center gap-6">
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundColor: 'rgba(5, 10, 24, 0.95)',
+          zIndex: 50,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '16px',
+          backdropFilter: 'blur(10px)',
+          animation: 'fadeIn 0.5s ease'
+        }}>
+          <div style={{
+            background: 'rgba(8, 14, 30, 0.9)',
+            border: '1px solid rgba(16, 185, 129, 0.3)',
+            borderRadius: '36px',
+            maxWidth: '560px',
+            width: '100%',
+            padding: '32px',
+            boxShadow: '0 0 40px rgba(16, 185, 129, 0.15)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            textAlign: 'center',
+            gap: '24px'
+          }}>
             <div className="text-7xl animate-bounce">🏆</div>
             <div>
-              <h2 className="text-green-700 font-black text-3xl tracking-widest uppercase">
+              <h2 style={{ color: '#10b981', fontWeight: 900, fontSize: '28px', letterSpacing: '0.1em', margin: 0 }} className="uppercase">
                 ¡Conquista Finalizada!
               </h2>
-              <p className="text-slate-500 text-sm mt-1.5 font-bold tracking-wider">
+              <p className="text-slate-400 text-xs mt-1.5 font-bold tracking-wider uppercase">
                 Marcador Definitivo e Interfacultades
               </p>
             </div>
 
-            {/* Podium list */}
-            <div className="w-full flex flex-col gap-3 my-4">
-              {podio.map((item, index) => {
+            {/* Lista de Podio */}
+            <div className="w-full flex flex-col gap-3 my-2">
+              {podio.slice(0, 3).map((item, index) => {
                 const isFirst = index === 0;
                 const isSecond = index === 1;
                 const isThird = index === 2;
                 
                 let icon = '🎖️';
-                let style = 'bg-white border-slate-200 text-slate-800 shadow-sm';
+                let itemStyle = {
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  borderColor: 'rgba(255, 255, 255, 0.08)',
+                  color: '#cbd5e1'
+                };
                 
                 if (isFirst) {
                   icon = '🥇';
-                  style = 'bg-yellow-500/10 border-yellow-500/40 text-yellow-700 shadow-[0_0_15px_rgba(234,179,8,0.1)]';
+                  itemStyle = {
+                    background: 'rgba(234, 179, 8, 0.08)',
+                    borderColor: 'rgba(234, 179, 8, 0.35)',
+                    color: '#fbbf24'
+                  };
                 } else if (isSecond) {
                   icon = '🥈';
-                  style = 'bg-slate-100 border-slate-300 text-slate-700';
+                  itemStyle = {
+                    background: 'rgba(203, 213, 225, 0.05)',
+                    borderColor: 'rgba(203, 213, 225, 0.2)',
+                    color: '#e2e8f0'
+                  };
                 } else if (isThird) {
                   icon = '🥉';
-                  style = 'bg-amber-700/10 border-amber-600/30 text-amber-800';
+                  itemStyle = {
+                    background: 'rgba(180, 83, 9, 0.05)',
+                    borderColor: 'rgba(180, 83, 9, 0.2)',
+                    color: '#f59e0b'
+                  };
                 }
 
                 return (
                   <div 
                     key={item.carrera} 
-                    className={`flex items-center justify-between px-5 py-4 rounded-2xl border font-black ${style}`}
+                    style={itemStyle}
+                    className="flex items-center justify-between px-5 py-4 rounded-2xl border font-black"
                   >
                     <div className="flex items-center gap-3">
                       <span className="text-2xl">{icon}</span>
-                      <span className="text-sm tracking-wide uppercase">{index + 1}° Lugar: {item.carrera}</span>
+                      <span className="text-xs tracking-wider uppercase">
+                        {index + 1}° Lugar: {item.carrera}
+                      </span>
                     </div>
-                    <span className="text-sm font-mono">{item.sectoresDominados} {item.sectoresDominados === 1 ? 'Sector' : 'Sectores'}</span>
+                    <span className="text-xs font-mono">
+                      {item.sectoresDominados} {item.sectoresDominados === 1 ? 'Sector' : 'Sectores'}
+                    </span>
                   </div>
                 );
               })}
             </div>
 
-            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider margin-0">
               Reinicia una partida en el panel de control del Expositor
             </p>
           </div>
         </div>
       )}
+
+      {/* Footer del Auditorio */}
+      <footer style={{ position: 'relative', zIndex: 10 }} 
+              className="text-[9px] text-slate-650 font-bold uppercase tracking-widest text-center mt-6">
+        RESPONDE Y AVANZA · CONTROL TERRITORIAL · UNIPAZ © 2026
+      </footer>
     </div>
   );
 }
