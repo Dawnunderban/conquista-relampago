@@ -27,9 +27,9 @@ export default function AdminApp() {
   const [pin, setPin] = useState('----');
   const [usuariosConectados, setUsuariosConectados] = useState(0);
   const [estadoJuego, setEstadoJuego] = useState('ESPERA');
-  const [carrerasConfiguradas, setCarrerasConfiguradas] = useState<string[]>([]);
   // Las 5 carreras estándar vienen precargadas para facilitar la configuración
   const CARRERAS_DEFAULT = ['Medicina', 'Ingeniería', 'Ciencias', 'Arte', 'Derecho'];
+  const [carrerasConfiguradas, setCarrerasConfiguradas] = useState<string[]>(CARRERAS_DEFAULT);
   const [carrerasLocales, setCarrerasLocales] = useState<string[]>(CARRERAS_DEFAULT);
   
   // Preguntas bank
@@ -69,6 +69,10 @@ export default function AdminApp() {
         setCarrerasLocales(estado.carreras);
       }
 
+      if (estado.preguntas) {
+        setPreguntasLocales(estado.preguntas);
+      }
+
       if (estado.estadoJuego === 'jugando') {
         if (estado.preguntaEnCurso) {
           setRondaEnCurso(true);
@@ -82,9 +86,8 @@ export default function AdminApp() {
     socket.on('partida_creada', ({ pin: nuevoPin }) => {
       setPin(nuevoPin);
       setEstadoJuego('ESPERA');
-      setCarrerasConfiguradas([]);
+      setCarrerasConfiguradas(['Medicina', 'Ingeniería', 'Ciencias', 'Arte', 'Derecho']);
       setCarrerasLocales(['Medicina', 'Ingeniería', 'Ciencias', 'Arte', 'Derecho']);
-      setPreguntasLocales([]);
       setRondaEnCurso(false);
       setPreguntaActiva('Ninguna');
       setSectorActivo('Ninguno');
@@ -98,16 +101,9 @@ export default function AdminApp() {
       alert('¡Carreras autorizadas y guardadas con éxito!');
     });
 
-    socket.on('pregunta_guardada', ({ total }) => {
-      // Guardar localmente
-      const p: Pregunta = {
-        texto: textoPregunta,
-        opciones: { A: opcA, B: opcB, C: opcC, D: opcD },
-        correcta,
-        tiempo: tiempoPregunta,
-        sector: sectorObjetivo
-      };
-      setPreguntasLocales(prev => [...prev, p]);
+    socket.on('pregunta_guardada', ({ total, pregunta }) => {
+      // Guardar localmente recibiendo el objeto pregunta desde el servidor
+      setPreguntasLocales(prev => [...prev, pregunta]);
       
       // Limpiar formulario
       setTextoPregunta('');
@@ -171,7 +167,7 @@ export default function AdminApp() {
     return () => {
       socket.disconnect();
     };
-  }, [textoPregunta, opcA, opcB, opcC, opcD, correcta, tiempoPregunta, sectorObjetivo]);
+  }, []);
 
   const handleCrearPartida = () => {
     socketRef.current?.emit('crear_partida');

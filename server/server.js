@@ -3,6 +3,7 @@ const http = require('http');
 const socketIo = require('socket.io');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -24,10 +25,12 @@ const io = socketIo(server, {
   }
 });
 
+const DEFAULT_CARRERAS = ["Medicina", "Ingeniería", "Ciencias", "Arte", "Derecho"];
+
 // Estado global en memoria para "Conquista Relámpago"
 let gameState = {
   pin: null,
-  carreras: [], // Nombres de las carreras configuradas (min 2, max 6)
+  carreras: [...DEFAULT_CARRERAS], // Nombres de las carreras configuradas (min 2, max 6)
   preguntas: [], // Banco de preguntas
   preguntaActualIndex: -1,
   mapa: {
@@ -38,7 +41,20 @@ let gameState = {
     "INGENIERÍA": { nombre: "Sector Ingeniería", dueño: "Libre" }
   },
   jugadores: {}, // socket.id -> { nickname, carrera }
-  marcadorRonda: {}, // carrera -> número de respuestas correctas en la ronda
+  marcadorRonda: {
+    "Medicina": 0,
+    "Ingeniería": 0,
+    "Ciencias": 0,
+    "Arte": 0,
+    "Derecho": 0
+  },
+  puntajes: { // acumulados durante la partida
+    "Medicina": 0,
+    "Ingeniería": 0,
+    "Ciencias": 0,
+    "Arte": 0,
+    "Derecho": 0
+  },
   estadoJuego: "espera", // "espera", "jugando", "finalizado"
   tiempoGlobal: 1200, // 20 minutos en segundos
   intervalIdGlobal: null,
@@ -90,8 +106,28 @@ const PREGUNTAS_PRUEBA = [
     sector: 'MEDICINA'
   }
 ];
-// ── Para activar las preguntas de prueba, descomenta la siguiente línea: ──
-// gameState.preguntas = PREGUNTAS_PRUEBA;
+
+// Cargar preguntas persistentes desde archivo preguntas.json
+const PREGUNTAS_FILE = path.join(__dirname, 'preguntas.json');
+if (fs.existsSync(PREGUNTAS_FILE)) {
+  try {
+    const data = fs.readFileSync(PREGUNTAS_FILE, 'utf8');
+    gameState.preguntas = JSON.parse(data);
+    console.log(`Cargadas ${gameState.preguntas.length} preguntas persistentes desde preguntas.json`);
+  } catch (err) {
+    console.error("Error al cargar preguntas.json:", err);
+    gameState.preguntas = [];
+  }
+} else {
+  // Inicializar preguntas.json con PREGUNTAS_PRUEBA por defecto si no existe
+  try {
+    gameState.preguntas = [...PREGUNTAS_PRUEBA];
+    fs.writeFileSync(PREGUNTAS_FILE, JSON.stringify(gameState.preguntas, null, 2), 'utf8');
+    console.log(`Creado preguntas.json inicializado con preguntas de prueba`);
+  } catch (err) {
+    console.error("Error al escribir preguntas.json inicial:", err);
+  }
+}
 
 // Generar un PIN aleatorio de 4 dígitos
 function generarPIN() {
@@ -113,8 +149,8 @@ function limpiarTemporizadores() {
 function resetEstadoCompleto() {
   limpiarTemporizadores();
   gameState.pin = null;
-  gameState.carreras = [];
-  gameState.preguntas = [];
+  gameState.carreras = [...DEFAULT_CARRERAS];
+  // NO borrar gameState.preguntas para asegurar persistencia
   gameState.preguntaActualIndex = -1;
   gameState.mapa = {
     "MEDICINA": { nombre: "Sector Medicina", dueño: "Libre" },
@@ -125,12 +161,18 @@ function resetEstadoCompleto() {
   };
   gameState.jugadores = {};
   gameState.marcadorRonda = {};
+  gameState.puntajes = {};
+  gameState.carreras.forEach(c => {
+    gameState.marcadorRonda[c] = 0;
+    gameState.puntajes[c] = 0;
+  });
   gameState.estadoJuego = "espera";
   gameState.tiempoGlobal = 1200;
   gameState.rondaTiempoRestante = 0;
   gameState.preguntaEnCurso = null;
   gameState.sectorEnCurso = null;
 }
+
 
 // Socket.io Connection
 io.on('connection', (socket) => {
@@ -143,10 +185,13 @@ io.on('connection', (socket) => {
     estadoJuego: gameState.estadoJuego,
     mapa: gameState.mapa,
     tiempoGlobal: gameState.tiempoGlobal,
+    preguntas: gameState.preguntas,
     preguntaEnCurso: gameState.preguntaEnCurso,
     rondaTiempoRestante: gameState.rondaTiempoRestante,
     sectorEnCurso: gameState.sectorEnCurso,
-    usuariosConectados: Object.keys(gameState.jugadores).length
+    usuariosConectados: Object.keys(gameState.jugadores).length,
+    marcadorRonda: gameState.marcadorRonda,
+    puntajes: gameState.puntajes
   });
 
   // --- EVENTOS DEL ADMINISTRADOR ---
@@ -164,7 +209,10 @@ io.on('connection', (socket) => {
       estadoJuego: gameState.estadoJuego,
       mapa: gameState.mapa,
       tiempoGlobal: gameState.tiempoGlobal,
-      usuariosConectados: 0
+      preguntas: gameState.preguntas,
+      usuariosConectados: 0,
+      marcadorRonda: gameState.marcadorRonda,
+      puntajes: gameState.puntajes
     });
   });
 
@@ -174,10 +222,12 @@ io.on('connection', (socket) => {
       return socket.emit('error_servidor', 'Debe haber entre 2 y 6 carreras autorizadas.');
     }
     gameState.carreras = carrerasRecibidas;
-    // Inicializar marcadores de ronda para cada carrera
+    // Inicializar marcadores de ronda y puntajes acumulados para cada carrera
     gameState.marcadorRonda = {};
+    gameState.puntajes = {};
     gameState.carreras.forEach(c => {
       gameState.marcadorRonda[c] = 0;
+      gameState.puntajes[c] = 0;
     });
     console.log(`Carreras configuradas: ${gameState.carreras.join(', ')}`);
     io.emit('carreras_actualizadas', gameState.carreras);
@@ -191,7 +241,16 @@ io.on('connection', (socket) => {
     }
     gameState.preguntas.push(nuevaPregunta);
     console.log(`Pregunta añadida. Total preguntas: ${gameState.preguntas.length}`);
-    socket.emit('pregunta_guardada', { total: gameState.preguntas.length });
+    
+    // Guardar de forma persistente en preguntas.json
+    try {
+      fs.writeFileSync(PREGUNTAS_FILE, JSON.stringify(gameState.preguntas, null, 2), 'utf8');
+      console.log(`Preguntas guardadas de forma persistente en preguntas.json`);
+    } catch (err) {
+      console.error("Error al guardar preguntas.json:", err);
+    }
+
+    socket.emit('pregunta_guardada', { total: gameState.preguntas.length, pregunta: nuevaPregunta });
   });
 
   // 'iniciar_juego': Dispara el cronómetro global de 20 minutos
@@ -348,16 +407,23 @@ io.on('connection', (socket) => {
       if (gameState.marcadorRonda[carreraJugador] !== undefined) {
         gameState.marcadorRonda[carreraJugador]++;
       }
+      if (gameState.puntajes[carreraJugador] !== undefined) {
+        gameState.puntajes[carreraJugador]++;
+      }
     }
 
     console.log(`Respuesta recibida de ${nickname} (${carreraJugador}): ${opcionSeleccionada}. Correcta: ${esCorrecta}`);
 
     // Emitir inmediatamente al auditorio/admin para que vean los marcadores subir en vivo
-    io.emit('votos_ronda_actualizados', gameState.marcadorRonda);
+    io.emit('votos_ronda_actualizados', {
+      marcadorRonda: gameState.marcadorRonda,
+      puntajes: gameState.puntajes
+    });
 
     // Dar retroalimentación de "recibido" al móvil
     socket.emit('respuesta_recibida', { esCorrecta });
   });
+
 
   // --- DESCONEXIÓN ---
   socket.on('disconnect', () => {

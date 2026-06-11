@@ -40,6 +40,10 @@ export default function JugarApp() {
   const [opcionSeleccionada, setOpcionSeleccionada] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
 
+  const [mapa, setMapa] = useState<Record<string, { nombre: string; dueño: string }>>({});
+  const [marcadorRonda, setMarcadorRonda] = useState<Record<string, number>>({});
+  const [puntajes, setPuntajes] = useState<Record<string, number>>({});
+
   const socketRef = useRef<Socket | null>(null);
 
   // Leer PIN de la URL si entra por QR
@@ -62,6 +66,9 @@ export default function JugarApp() {
       if (estado.carreras && estado.carreras.length > 0) {
         setCarrerasDisponibles(estado.carreras);
       }
+      if (estado.mapa) setMapa(estado.mapa);
+      if (estado.marcadorRonda) setMarcadorRonda(estado.marcadorRonda);
+      if (estado.puntajes) setPuntajes(estado.puntajes);
       
       // Si el juego finalizó antes de que entremos
       if (estado.estadoJuego === 'finalizado') {
@@ -69,8 +76,25 @@ export default function JugarApp() {
       }
     });
 
-    socket.on('carreras_actualizadas', (carreras) => {
+    socket.on('partida_creada', () => {
+      setMapa({});
+      setMarcadorRonda({});
+      setPuntajes({});
+      setPreguntaActiva(null);
+      setOpcionSeleccionada(null);
+      setFeedback(null);
+    });
+
+    socket.on('carreras_actualizadas', (carreras: string[]) => {
       setCarrerasDisponibles(carreras);
+      const m: Record<string, number> = {};
+      const pts: Record<string, number> = {};
+      carreras.forEach((c: string) => {
+        m[c] = 0;
+        pts[c] = 0;
+      });
+      setMarcadorRonda(m);
+      setPuntajes(pts);
     });
 
     socket.on('registro_exitoso', ({ nickname: nick, carrera: carr }) => {
@@ -81,31 +105,56 @@ export default function JugarApp() {
       setErrorRegistro(null);
     });
 
-    socket.on('registro_error', (msg) => {
+    socket.on('registro_error', (msg: string) => {
       setErrorRegistro(msg);
       setLoadingRegistro(false);
     });
 
-    socket.on('pregunta_lanzada', ({ pregunta, tiempoRonda }) => {
+    socket.on('juego_iniciado', ({ mapa: m, carreras: c }: { mapa?: any; carreras?: string[] }) => {
+      setEstadoJuego('jugando');
+      if (m) setMapa(m);
+      if (c) {
+        setCarrerasDisponibles(c);
+        setPuntajes(prev => {
+          const next = { ...prev };
+          c.forEach((name: string) => {
+            if (next[name] === undefined) next[name] = 0;
+          });
+          return next;
+        });
+      }
+    });
+
+    socket.on('pregunta_lanzada', ({ pregunta, tiempoRonda, marcadorRonda: mr }: { pregunta: any; tiempoRonda: number; marcadorRonda?: any }) => {
       setPreguntaActiva(pregunta);
       setTiempoRestante(tiempoRonda);
       setMaxTiempoPregunta(pregunta.tiempo);
       setOpcionSeleccionada(null);
       setFeedback(null);
+      if (mr) setMarcadorRonda(mr);
     });
 
-    socket.on('tiempo_ronda_actualizacion', (segundos) => {
+    socket.on('tiempo_ronda_actualizacion', (segundos: number) => {
       setTiempoRestante(segundos);
     });
 
-    socket.on('respuesta_recibida', ({ esCorrecta }) => {
+    socket.on('votos_ronda_actualizados', (datos: any) => {
+      if (datos) {
+        if (datos.marcadorRonda) setMarcadorRonda(datos.marcadorRonda);
+        if (datos.puntajes) setPuntajes(datos.puntajes);
+      }
+    });
+
+    socket.on('respuesta_recibida', ({ esCorrecta }: { esCorrecta: boolean }) => {
       setFeedback(esCorrecta ? '¡Respuesta enviada! (Correcta)' : '¡Respuesta enviada! (Incorrecta)');
     });
 
-    socket.on('ronda_terminada', () => {
+    socket.on('ronda_terminada', ({ mapa: m, marcadorFinalRonda }: { mapa?: any; marcadorFinalRonda?: any }) => {
       setPreguntaActiva(null);
       setOpcionSeleccionada(null);
       setFeedback(null);
+      if (m) setMapa(m);
+      if (marcadorFinalRonda) setMarcadorRonda(marcadorFinalRonda);
     });
 
     socket.on('juego_finalizado', () => {
@@ -277,6 +326,23 @@ export default function JugarApp() {
         );
 
       case 'ranking':
+        const countSectors = (teamName: string) => {
+          return Object.values(mapa).filter(s => s.dueño.toUpperCase() === teamName.toUpperCase()).length;
+        };
+
+        const sortedTeams = carrerasDisponibles.map(team => ({
+          name: team,
+          owned: countSectors(team),
+          puntos: puntajes[team] || 0,
+          roundScore: marcadorRonda[team] || 0,
+        })).sort((a, b) => {
+          if (b.owned !== a.owned) return b.owned - a.owned;
+          if (b.puntos !== a.puntos) return b.puntos - a.puntos;
+          return b.roundScore - a.roundScore;
+        });
+
+        const maxSecs = Math.max(...sortedTeams.map(t => t.owned), 1);
+
         return (
           <div className="flex flex-col gap-4 px-4 pt-2 pb-4 h-full overflow-y-auto no-scrollbar">
             <div className="text-center">
@@ -285,29 +351,52 @@ export default function JugarApp() {
             </div>
 
             <div className="flex flex-col gap-2">
-              {carrerasDisponibles.map((team, idx) => {
-                const color = getFacultyColorClass(team);
+              {sortedTeams.map((team, idx) => {
+                const color = getFacultyColorClass(team.name);
+                const percent = maxSecs > 0 ? (team.owned / maxSecs) * 100 : 0;
                 return (
                   <motion.div
-                    key={team}
+                    key={team.name}
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: idx * 0.05 }}
-                    className="flex items-center justify-between p-3.5 rounded-xl border bg-white border-slate-200 shadow-sm"
+                    className="flex flex-col gap-2 p-3 rounded-xl border bg-white border-slate-200 shadow-sm"
                   >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-6 h-6 rounded-full border border-slate-200 bg-slate-55 flex items-center justify-center font-bold text-xs text-slate-500 flex-shrink-0">
-                        {idx < 3 ? medals[idx] : idx + 1}
+                    <div className="flex items-center justify-between min-w-0">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-5 h-5 rounded-full border border-slate-200 bg-slate-50 flex items-center justify-center font-bold text-xs text-slate-500 flex-shrink-0">
+                          {idx < 3 ? medals[idx] : idx + 1}
+                        </div>
+                        <span className={`font-black tracking-wide text-xs truncate ${color}`}>
+                          {team.name}
+                        </span>
                       </div>
-                      <span className={`font-black tracking-wide text-xs truncate ${color}`}>
-                        {team}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        {team.name === carrera && (
+                          <span className="text-[8px] font-black bg-green-500/10 border border-green-500/20 text-green-700 px-1.5 py-0.5 rounded-full uppercase">
+                            TÚ
+                          </span>
+                        )}
+                        <span className="text-xs font-mono font-black text-slate-900">
+                          {team.owned} <span className="text-[8px] text-slate-500 font-bold">SEC</span>
+                        </span>
+                      </div>
                     </div>
-                    {team === carrera && (
-                      <span className="text-[8px] font-black bg-green-500/10 border border-green-500/20 text-green-700 px-2 py-0.5 rounded-full uppercase">
-                        TÚ
-                      </span>
-                    )}
+                    {/* Progress Bar for Sectors */}
+                    <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
+                      <div 
+                        style={{
+                          width: `${percent}%`,
+                        }}
+                        className={`h-full rounded-full bg-current ${color}`}
+                      />
+                    </div>
+                    <div className="flex justify-between text-[9px] text-slate-500 font-bold uppercase tracking-wider">
+                      <span>Puntaje: {team.puntos} pts</span>
+                      {team.roundScore > 0 && (
+                        <span className="text-green-600 font-extrabold">+{team.roundScore} ronda</span>
+                      )}
+                    </div>
                   </motion.div>
                 );
               })}

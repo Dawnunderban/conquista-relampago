@@ -209,6 +209,7 @@ export default function AuditorioApp() {
   
   const [carreras, setCarreras] = useState<string[]>([]);
   const [marcadorRonda, setMarcadorRonda] = useState<Record<string, number>>({});
+  const [puntajes, setPuntajes] = useState<Record<string, number>>({});
   const [preguntaEnCurso, setPreguntaEnCurso] = useState<{
     texto: string;
     opciones: { A: string; B: string; C: string; D: string };
@@ -249,6 +250,9 @@ export default function AuditorioApp() {
         });
         setMarcadorRonda(m);
       }
+      if (estado.puntajes) {
+        setPuntajes(estado.puntajes);
+      }
       if (estado.preguntaEnCurso) {
         setPreguntaEnCurso(estado.preguntaEnCurso);
         setMaxTiempoRonda(estado.preguntaEnCurso.tiempo);
@@ -264,15 +268,19 @@ export default function AuditorioApp() {
       setActivityFeed([]);
       setSectorEnCurso(null);
       setPreguntaEnCurso(null);
+      setPuntajes({});
     });
 
     socket.on('carreras_actualizadas', (carrerasAct) => {
       setCarreras(carrerasAct);
       const m: Record<string, number> = {};
+      const pts: Record<string, number> = {};
       carrerasAct.forEach((c: string) => {
         m[c] = 0;
+        pts[c] = 0;
       });
       setMarcadorRonda(m);
+      setPuntajes(pts);
     });
 
     socket.on('usuarios_conectados_actualizacion', (cantidad) => {
@@ -287,7 +295,16 @@ export default function AuditorioApp() {
       setEstadoJuego('jugando');
       setTiempoGlobal(tg);
       if (m) setMapa(m);
-      if (c) setCarreras(c);
+      if (c) {
+        setCarreras(c);
+        setPuntajes(prev => {
+          const next = { ...prev };
+          c.forEach((name: string) => {
+            if (next[name] === undefined) next[name] = 0;
+          });
+          return next;
+        });
+      }
       setRondaResumen('¡La batalla interfacultades ha comenzado!');
     });
 
@@ -304,8 +321,11 @@ export default function AuditorioApp() {
       setTiempoRonda(segundos);
     });
 
-    socket.on('votos_ronda_actualizados', (mr) => {
-      if (mr) setMarcadorRonda(mr);
+    socket.on('votos_ronda_actualizados', (datos) => {
+      if (datos) {
+        if (datos.marcadorRonda) setMarcadorRonda(datos.marcadorRonda);
+        if (datos.puntajes) setPuntajes(datos.puntajes);
+      }
     });
 
     socket.on('ronda_terminada', ({ sectorId, sectorNombre, dueño, marcadorFinalRonda, maxAciertos, hayEmpate, mapa: m }) => {
@@ -396,10 +416,13 @@ export default function AuditorioApp() {
   const sortedCareers = activeCareers.map(name => ({
     name,
     owned: countCapturedSectors(name),
+    puntos: puntajes[name] || 0,
     emoji: getCareerEmoji(name),
     color: obtenerColorCarrera(name, activeCareers)
   })).sort((a, b) => {
     if (b.owned !== a.owned) return b.owned - a.owned;
+
+    if (b.puntos !== a.puntos) return b.puntos - a.puntos;
     
     const scoreA = marcadorRonda[a.name] || 0;
     const scoreB = marcadorRonda[b.name] || 0;
@@ -593,13 +616,13 @@ export default function AuditorioApp() {
           {/* Logo UNIPAZ + Título */}
           <div className="flex items-center gap-4">
             <img
-              src="/assets/unipaz.jpg"
+              src="/assets/unipaz-identidad.svg"
               alt="Logo UNIPAZ"
               style={{
                 width: '72px',
                 height: '72px',
                 borderRadius: '16px',
-                objectFit: 'cover',
+                objectFit: 'contain',
                 border: '2px solid rgba(34,197,94,0.4)',
                 boxShadow: '0 0 20px rgba(34,197,94,0.2)',
                 flexShrink: 0,
@@ -956,11 +979,16 @@ export default function AuditorioApp() {
                           {c.emoji} {c.name}
                         </span>
                       </div>
-                      <div className="flex items-baseline gap-0.5 shrink-0">
-                        <span className="font-mono font-black text-sm text-white">
-                          {c.owned}
+                      <div className="flex flex-col items-end shrink-0">
+                        <div className="flex items-baseline gap-0.5">
+                          <span className="font-mono font-black text-sm text-white">
+                            {c.owned}
+                          </span>
+                          <span className="text-[8px] text-slate-550 font-bold uppercase tracking-wider">SEC</span>
+                        </div>
+                        <span className="text-[10px] text-cyan-400 font-extrabold uppercase tracking-wider">
+                          {c.puntos} PTS
                         </span>
-                        <span className="text-[8px] text-slate-550 font-bold uppercase tracking-wider">SEC</span>
                       </div>
                     </div>
 
