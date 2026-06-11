@@ -220,6 +220,9 @@ export default function AuditorioApp() {
 
   // Sector seleccionado manualmente para inspección en pantalla
   const [sectorSeleccionado, setSectorSeleccionado] = useState<string | null>(null);
+  
+  // Sector bajo el puntero del mouse (Hover)
+  const [hoveredSector, setHoveredSector] = useState<string | null>(null);
 
   // Historial de actividad (rolling log)
   const [activityFeed, setActivityFeed] = useState<{ id: string; text: string; time: string }[]>([]);
@@ -389,6 +392,7 @@ export default function AuditorioApp() {
       .join(', ');
   };
 
+  // Ordenamos cromáticamente por espectro de color (Verde -> Celeste -> Amarillo -> Naranja -> Violeta) cuando los puntajes son iguales
   const sortedCareers = activeCareers.map(name => ({
     name,
     owned: countCapturedSectors(name),
@@ -396,13 +400,79 @@ export default function AuditorioApp() {
     color: obtenerColorCarrera(name, activeCareers)
   })).sort((a, b) => {
     if (b.owned !== a.owned) return b.owned - a.owned;
-    return (marcadorRonda[b.name] || 0) - (marcadorRonda[a.name] || 0);
+    
+    const scoreA = marcadorRonda[a.name] || 0;
+    const scoreB = marcadorRonda[b.name] || 0;
+    if (scoreB !== scoreA) return scoreB - scoreA;
+
+    // Fallback de orden cromático (Medicina -> Ingeniería -> Ciencias -> Arte -> Derecho)
+    const colorOrder = ['MEDICINA', 'INGENIERÍA', 'CIENCIAS', 'ARTE', 'DERECHO'];
+    const idxA = colorOrder.indexOf(a.name.toUpperCase());
+    const idxB = colorOrder.indexOf(b.name.toUpperCase());
+    if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+
+    return a.name.localeCompare(b.name);
   });
 
   const maxSectorsOwned = Math.max(...sortedCareers.map(c => c.owned), 1);
 
-  // Renderizar el contenido lateral cuando se inspecciona o ataca un sector
-  const renderSectorPanel = (secKey: string) => {
+  // Renderizar el contenido lateral (siempre visible)
+  const renderSectorPanel = (secKey: string | null) => {
+    if (!secKey) {
+      // General Lobby / QR unificado principal
+      return (
+        <div className="flex flex-col gap-3.5 animate-fadeIn text-center items-center justify-center py-2">
+          <div 
+            style={{
+              background: 'linear-gradient(135deg, rgba(6,182,212,0.2), rgba(168,85,247,0.1))',
+              border: '1px solid rgba(6,182,212,0.3)'
+            }}
+            className="rounded-2xl p-4 w-full shadow-md animate-pulse"
+          >
+            <div className="text-4xl mb-1">🏛️</div>
+            <h3 className="text-base font-black tracking-widest text-cyan-400 uppercase">
+              Lobby de Juego
+            </h3>
+            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block mt-1">
+              Únete a la Batalla
+            </span>
+          </div>
+
+          <div className="bg-[#050a18]/80 border border-slate-800 rounded-2xl p-4 w-full shadow-inner">
+            <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest block">
+              PIN DE ACCESO
+            </span>
+            <h4 className="text-2xl font-mono font-black text-green-500 tracking-widest mt-1.5">
+              {pin}
+            </h4>
+          </div>
+
+          {/* QR único para todas las carreras */}
+          <div className="flex flex-col items-center gap-2 mt-2 w-full">
+            {qrCodeUrl ? (
+              <div 
+                style={{ borderColor: 'rgba(6,182,212,0.4)', boxShadow: '0 0 15px rgba(6,182,212,0.15)' }}
+                className="p-2.5 bg-[#050a18] border-2 rounded-xl"
+              >
+                <img
+                  src={qrCodeUrl}
+                  alt="QR Code"
+                  className="w-32 h-32 rounded-lg"
+                />
+              </div>
+            ) : (
+              <div className="w-32 h-32 border border-dashed border-slate-800 rounded-xl flex items-center justify-center text-slate-600 text-xs font-bold uppercase">
+                Lobby...
+              </div>
+            )}
+            <p className="text-[9px] text-slate-400 font-bold max-w-[200px] mt-1 leading-normal">
+              Cualquier participante puede escanear para ingresar su alias y elegir su carrera
+            </p>
+          </div>
+        </div>
+      );
+    }
+
     const s = SECTOR_MAP[secKey];
     if (!s) return null;
     const isAttacked = sectorEnCurso === secKey;
@@ -455,17 +525,17 @@ export default function AuditorioApp() {
             </div>
           )}
 
-          {/* QR para contestar */}
+          {/* QR unificado único */}
           <div className="flex flex-col items-center gap-2 mt-2">
             {qrCodeUrl && (
               <div 
-                style={{ borderColor: s.color, boxShadow: `0 0 15px ${s.color}33` }}
-                className="p-2.5 bg-[#050a18] border-2 rounded-xl"
+                style={{ borderColor: 'rgba(6,182,212,0.4)', boxShadow: `0 0 15px rgba(6,182,212,0.15)` }}
+                className="p-2 bg-[#050a18] border-2 rounded-xl"
               >
                 <img
                   src={qrCodeUrl}
                   alt="QR Code"
-                  className="w-28 h-28 rounded-lg"
+                  className="w-24 h-24 rounded-lg"
                 />
               </div>
             )}
@@ -493,7 +563,7 @@ export default function AuditorioApp() {
           <h3 style={{ color: s.color }} className="text-base font-black tracking-widest uppercase">
             {s.label}
           </h3>
-          <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block mt-1">
+          <span className="text-[9px] text-slate-550 font-bold uppercase tracking-wider block mt-1">
             Territorio Académico
           </span>
         </div>
@@ -511,20 +581,16 @@ export default function AuditorioApp() {
         </div>
 
         <div className="flex flex-col items-center gap-2 mt-3">
-          {qrCodeUrl ? (
+          {qrCodeUrl && (
             <div 
-              style={{ borderColor: s.color, boxShadow: `0 0 15px ${s.color}20` }}
-              className="p-2.5 bg-[#050a18] border-2 rounded-xl"
+              style={{ borderColor: 'rgba(6,182,212,0.4)', boxShadow: `0 0 15px rgba(6,182,212,0.15)` }}
+              className="p-2 bg-[#050a18] border-2 rounded-xl"
             >
               <img
                 src={qrCodeUrl}
                 alt="QR Code"
-                className="w-28 h-28 rounded-lg"
+                className="w-24 h-24 rounded-lg"
               />
-            </div>
-          ) : (
-            <div className="w-28 h-28 border border-dashed border-slate-800 rounded-xl flex items-center justify-center text-slate-600 text-xs font-bold uppercase">
-              Lobby...
             </div>
           )}
           <span style={{ color: s.color }} className="text-[9px] font-black tracking-wider uppercase">
@@ -703,11 +769,17 @@ export default function AuditorioApp() {
                     const path = makePath(s.startDeg, s.endDeg);
                     const lp = midPt(s.startDeg, s.endDeg, R_LBL);
                     const currentStrokeColor = getSectorColor(s.key);
+                    const sectorObj = mapa[s.key] || { nombre: s.label, dueño: 'Libre' };
+                    
+                    const isShown = isAct || hoveredSector === s.key;
+                    const ownerColor = sectorObj.dueño !== 'Libre' ? obtenerColorCarrera(sectorObj.dueño, carreras) : s.color;
 
                     return (
                       <g
                         key={s.key}
                         onClick={() => setSectorSeleccionado(isAct ? null : s.key)}
+                        onMouseEnter={() => setHoveredSector(s.key)}
+                        onMouseLeave={() => setHoveredSector(null)}
                         style={{ cursor: 'pointer', pointerEvents: 'all' }}
                       >
                         {/* Relleno translúcido */}
@@ -729,29 +801,42 @@ export default function AuditorioApp() {
                           style={{ transition: 'all 0.25s ease, stroke 0.4s ease' }}
                         />
 
-                        {/* Etiqueta flotante */}
-                        {isAct && (
+                        {/* Etiqueta flotante con nombre y puntos (sectores dominados) al pasar mouse */}
+                        {isShown && (
                           <g>
                             <rect
-                              x={lp.x - 55}
-                              y={lp.y - 14}
-                              width={110}
-                              height={28}
-                              rx="14"
+                              x={lp.x - 70}
+                              y={lp.y - 20}
+                              width={140}
+                              height={38}
+                              rx="10"
                               fill="#050a18ee"
                               stroke={isAttacked ? '#fbbf24' : currentStrokeColor}
                               strokeWidth="1.8"
                             />
+                            {/* Nombre del sector */}
                             <text
                               x={lp.x}
-                              y={lp.y + 5}
+                              y={lp.y - 6}
                               textAnchor="middle"
-                              fontSize="10"
-                              fontWeight="800"
+                              fontSize="9"
+                              fontWeight="900"
                               fill="#ffffff"
                               style={{ fontFamily: 'Inter, sans-serif', pointerEvents: 'none' }}
                             >
                               {s.label.toUpperCase()}
+                            </text>
+                            {/* Dueño y Puntos */}
+                            <text
+                              x={lp.x}
+                              y={lp.y + 8}
+                              textAnchor="middle"
+                              fontSize="8"
+                              fontWeight="bold"
+                              fill={ownerColor}
+                              style={{ fontFamily: 'Inter, sans-serif', pointerEvents: 'none' }}
+                            >
+                              {sectorObj.dueño === 'Libre' ? 'SIN DUEÑO' : `${sectorObj.dueño.toUpperCase()} (${countCapturedSectors(sectorObj.dueño)} SEC)`}
                             </text>
                           </g>
                         )}
@@ -760,53 +845,52 @@ export default function AuditorioApp() {
                   })}
                 </svg>
 
-                {!sectorSeleccionado && (
-                  <div style={{
-                    position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)',
-                    padding: '8px 18px', borderRadius: '20px',
-                    background: 'rgba(2,6,15,0.9)',
-                    border: '1px solid rgba(6,182,212,0.3)',
-                    color: '#ffffff', zIndex: 3, fontSize: '10px', fontWeight: '800',
-                    backdropFilter: 'blur(8px)', whiteSpace: 'nowrap',
-                    letterSpacing: '0.08em',
-                    boxShadow: '0 0 15px rgba(6,182,212,0.2)'
-                  }}>
-                    👆 SELECCIONA UN SECTOR EN EL MAPA
-                  </div>
-                )}
+                {/* Decoración del centro integrada con la imagen */}
+                <div style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  width: '74px',
+                  height: '74px',
+                  borderRadius: '50%',
+                  zIndex: 3,
+                  pointerEvents: 'none'
+                }} />
+
               </div>
             </div>
 
-            {/* Panel de preguntas overlay lateral flotante */}
-            {sectorSeleccionado && (
-              <div style={{
-                position: 'absolute',
-                top: 24,
-                right: 24,
-                width: '290px',
-                background: 'rgba(7,11,26,0.97)',
-                border: `1.5px solid ${getSectorColor(sectorSeleccionado)}70`,
-                borderRadius: '20px',
-                padding: '16px',
-                boxShadow: `0 0 40px ${getSectorColor(sectorSeleccionado)}25, 0 15px 40px rgba(0,0,0,0.8)`,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px',
-                maxHeight: 'calc(100% - 48px)',
-                overflowY: 'auto',
-                backdropFilter: 'blur(20px)',
-                zIndex: 20,
-                animation: 'slideLeft 0.35s cubic-bezier(0.16, 1, 0.3, 1)'
-              }}>
+            {/* Panel de preguntas overlay lateral flotante (Siempre Visible) */}
+            <div style={{
+              position: 'absolute',
+              top: 24,
+              right: 24,
+              width: '290px',
+              background: 'rgba(7,11,26,0.97)',
+              border: `1.5px solid ${sectorSeleccionado ? getSectorColor(sectorSeleccionado) : 'rgba(6,182,212,0.3)'}70`,
+              borderRadius: '20px',
+              padding: '16px',
+              boxShadow: `0 0 40px ${sectorSeleccionado ? getSectorColor(sectorSeleccionado) : 'rgba(6,182,212,0.3)'}25, 0 15px 40px rgba(0,0,0,0.8)`,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px',
+              maxHeight: 'calc(100% - 48px)',
+              overflowY: 'auto',
+              backdropFilter: 'blur(20px)',
+              zIndex: 20,
+              animation: 'slideLeft 0.35s cubic-bezier(0.16, 1, 0.3, 1)'
+            }}>
+              {sectorSeleccionado && (
                 <button
                   onClick={() => setSectorSeleccionado(null)}
                   className="bg-white/5 border border-white/10 hover:bg-white/10 text-slate-400 text-[9px] font-black py-1.5 px-3 rounded-lg self-end cursor-pointer tracking-wider"
                 >
                   ✕ CERRAR
                 </button>
-                {renderSectorPanel(sectorSeleccionado)}
-              </div>
-            )}
+              )}
+              {renderSectorPanel(sectorSeleccionado)}
+            </div>
 
           </div>
         </section>
@@ -876,7 +960,7 @@ export default function AuditorioApp() {
                     </div>
 
                     {/* Ronda Aciertos Status */}
-                    <div className="flex justify-between items-center text-[9px] text-slate-500 font-bold uppercase tracking-wider">
+                    <div className="flex justify-between items-center text-[9px] text-slate-550 font-bold uppercase tracking-wider">
                       <span>
                         Sectores: {c.owned}{' '}
                         {c.owned > 0 && (
